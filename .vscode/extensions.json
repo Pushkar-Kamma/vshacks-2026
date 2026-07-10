@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "eamodio.gitlens",
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+  ]
+}
