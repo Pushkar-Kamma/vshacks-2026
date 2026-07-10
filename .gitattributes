@@ -1,0 +1,3 @@
+# Normalize line endings so 3 people on different machines don't create noisy
+# CRLF/LF diffs in pull requests. Everyone gets LF on checkout.
+* text=auto eol=lf
