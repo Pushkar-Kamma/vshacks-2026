@@ -47,14 +47,39 @@ supabase-config.js  # backend URL + publishable key
 - **Moments:** photos are grouped by capture time; "Other angles" shows one moment from everyone's phones.
 - **Photos of You:** an optional on-device face match against a selfie (deleted after).
 
+## ✨ Nice touches
+- **Auto-clean stat line** — "N pooled · B best kept · D tidied away" updates live (the automation, made visible).
+- **Slideshow** (▶) — plays the current photos fullscreen with a gentle zoom; a perfect demo closer.
+- **One-file ZIP download** — grabs everything on screen as a single `.zip`.
+- **Live sync on every phone** — new photos appear for everyone within a few seconds, with a little "so-and-so added a photo" nudge.
+- **Tap "You"** to reroll your color + name; sessions get fun auto names ("Rooftop Night").
+
+## 🔓 Optional: unlock full-res Storage + instant realtime
+The app **works out of the box** — if photo uploads to Supabase Storage are blocked,
+it automatically embeds a smaller copy of the image in the database row instead, and
+phones stay in sync by polling every few seconds. To get **full-resolution originals**
+and **instant** push updates, paste this once into the Supabase **SQL editor**
+(Dashboard → SQL) — the app upgrades itself automatically:
+
+```sql
+-- Let anyone with the room link upload + read photos in the 'photos' bucket
+create policy "Candid anon upload" on storage.objects
+  for insert to anon with check (bucket_id = 'photos');
+create policy "Candid anon read" on storage.objects
+  for select to anon using (bucket_id = 'photos');
+
+-- Turn on instant live updates for the photos table
+alter publication supabase_realtime add table public.photos;
+```
+
 ## 👥 Team & workflow
 We're 4 (2 UI, 2 code). See [CONTRIBUTING.md](CONTRIBUTING.md). Branch → PR → teammate merges → `main` auto-deploys.
 
 ## ⚠️ Known limitations / TODO (be honest in the demo)
 - **Moments use file timestamps** (can be off for exported/imported photos) — test with the real demo phones.
 - **Face matching** downloads ~12 MB of models and runs per-photo — use a small, tested photo set in the demo.
-- **Security:** Supabase RLS is permissive for the demo (anyone with the key can read/write). Before real use, restrict to `SELECT`/`INSERT`, add storage size/type limits, and reset the project. Room codes are for sharing, not privacy.
-- **Download-all** may hit the browser's multiple-download block; a ZIP is the eventual fix.
+- **Security:** the demo Supabase policies are permissive (anyone with the key can read/write). Before real use, tighten them, add storage size/type limits, and reset the project. Room codes are for sharing, not privacy.
+- **Without the SQL above**, shared images are a bit smaller (embedded in the row) and cross-phone sync is every ~4s instead of instant.
 
 ## ⚠️ AI usage rules (important!)
 

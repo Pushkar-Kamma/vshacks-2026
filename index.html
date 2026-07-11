@@ -30,6 +30,9 @@
           <span id="room-code" class="room-code"></span>
         </div>
         <div class="room-actions">
+          <button id="me-chip" class="me-chip" title="Tap to change your name & color">
+            <span id="me-dot" class="dot"></span><span id="me-name">You</span>
+          </button>
           <span id="member-avatars" class="avatars"></span>
           <button id="btn-invite" class="icon-btn" title="Invite">Invite</button>
         </div>
@@ -40,7 +43,10 @@
           <button id="tab-best" class="toggle-opt active">⭐ Best <span id="count-best">0</span></button>
           <button id="tab-all" class="toggle-opt">All <span id="count-all">0</span></button>
         </div>
+        <button id="btn-slideshow" class="play-btn" title="Play a slideshow">▶</button>
       </div>
+
+      <p id="stats" class="stats hidden"></p>
 
       <div id="filter-row" class="filter-row"></div>
 
@@ -78,6 +84,7 @@
       <div class="loupe-info">
         <span id="loupe-owner"></span>
         <button id="loupe-angles" class="chip hidden"></button>
+        <button id="loupe-download" class="chip">⬇ Save</button>
       </div>
     </div>
 
@@ -98,6 +105,7 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
 
     <!-- Our code -->

@@ -71,13 +71,15 @@
     view: "best",
     filter: { type: "none" },
     meIds: null,
+    lastSeen: null,
   };
 
   // ---------- rooms ----------
   async function startSession() {
     try {
-      const code = await Store.createRoom("Session");
-      await enterRoom(code, { name: "Session" });
+      const name = Names.randomRoomName();
+      const code = await Store.createRoom(name);
+      await enterRoom(code, { name: name });
       openInvite();
     } catch (e) { console.error(e); toast("Couldn't start session"); }
   }
@@ -96,21 +98,56 @@
     state.room = { code: code, name: (room && room.name) || code };
     $("room-name").textContent = state.room.name;
     $("room-code").textContent = code;
+    renderMe();
     showScreen("room");
     history.replaceState(null, "", "?room=" + code);
     Store.subscribe(code, onInsert);
     const existing = await Store.loadPhotos(code);
     existing.forEach(addToState);
+    trackSeen(existing);
     render();
+    startPolling();
   }
 
   function onInsert(photo) {
     if (addToState(photo)) {
+      trackSeen([photo]);
       render();
       if (photo.uploaderId !== state.identity.id) {
         toast(photo.uploaderName + " added a photo");
       }
     }
+  }
+
+  // Remember the newest photo time we've seen, so polling only asks for newer ones.
+  function trackSeen(photos) {
+    photos.forEach(function (p) {
+      if (p.createdAt && (!state.lastSeen || p.createdAt > state.lastSeen)) {
+        state.lastSeen = p.createdAt;
+      }
+    });
+  }
+
+  // Live updates use Supabase realtime when it's enabled; this polling backup
+  // keeps everyone in sync either way by checking for new photos every few seconds.
+  let pollTimer = null;
+  function startPolling() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async function () {
+      if (!state.room) return;
+      try {
+        const news = await Store.loadPhotos(state.room.code, state.lastSeen);
+        let changed = false;
+        news.forEach(function (p) {
+          if (addToState(p)) {
+            changed = true;
+            if (p.uploaderId !== state.identity.id) toast(p.uploaderName + " added a photo");
+          }
+        });
+        trackSeen(news);
+        if (changed) render();
+      } catch (e) { console.error(e); }
+    }, 4000);
   }
 
   function addToState(photo) {
@@ -138,7 +175,7 @@
       try {
         const img = await fileToImage(file);
         const features = Curate.analyzePhoto(img);
-        const blob = await downscaleToBlob(img, 1400, 0.82);
+        const blob = await downscaleToBlob(img, 1200, 0.72);
         URL.revokeObjectURL(img.src);
         const saved = await Store.addPhoto(state.room.code, {
           uploaderId: state.identity.id,
@@ -148,7 +185,7 @@
           phash: features.phash,
           sharpness: features.sharpness,
         }, blob);
-        if (addToState(saved)) render();
+        if (addToState(saved)) { trackSeen([saved]); render(); }
         added++;
       } catch (e) {
         console.error(e);
@@ -195,6 +232,7 @@
 
     renderAvatars();
     renderFilters();
+    renderStats();
 
     grid.innerHTML = "";
     list.forEach(function (photo) {
@@ -238,6 +276,40 @@
       a.title = m.name;
       wrap.appendChild(a);
     });
+  }
+
+  // Show who "you" are in the room bar (tap the chip to reroll).
+  function renderMe() {
+    $("me-dot").style.background = state.identity.color;
+    $("me-name").textContent = state.identity.name.split(" ")[0];
+    $("me-chip").title = "You're " + state.identity.name + " — tap to change";
+  }
+
+  // The "automation" headline: how many photos we pooled, kept, and tidied.
+  function renderStats() {
+    const el = $("stats");
+    const total = state.photos.length;
+    if (!total) { hide(el); return; }
+    let best = 0;
+    for (const p of state.photos) if (p.isBest) best++;
+    const dupes = total - best;
+    el.innerHTML = "";
+    const spark = document.createElement("span");
+    spark.className = "spark";
+    spark.textContent = "✨ ";
+    el.appendChild(spark);
+    el.appendChild(strong(total));
+    el.appendChild(document.createTextNode(" pooled · "));
+    el.appendChild(strong(best));
+    el.appendChild(document.createTextNode(" best kept · "));
+    el.appendChild(strong(dupes));
+    el.appendChild(document.createTextNode(" tidied away"));
+    show(el);
+  }
+  function strong(n) {
+    const b = document.createElement("b");
+    b.textContent = String(n);
+    return b;
   }
 
   function renderFilters() {
@@ -319,27 +391,78 @@
     renderLoupe();
   }
 
+  // ---------- slideshow ----------
+  // Play the photos currently on screen fullscreen, auto-advancing (a highlight reel).
+  let slideTimer = null;
+  function startSlideshow() {
+    const list = visiblePhotos();
+    if (!list.length) { toast("Add photos first"); return; }
+    openLoupe(list[0], list);
+    $("modal-loupe").classList.add("playing");
+    clearInterval(slideTimer);
+    slideTimer = setInterval(function () { loupeStep(1); }, 2800);
+  }
+  function stopSlideshow() {
+    clearInterval(slideTimer);
+    slideTimer = null;
+    $("modal-loupe").classList.remove("playing");
+  }
+
   // ---------- download ----------
+  // Download a single photo as a file.
+  async function downloadOne(photo) {
+    const res = await fetch(photo.url);
+    if (!res.ok) throw new Error("fetch failed");
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "candid-" + photo.id + ".jpg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // Download everything currently shown. If JSZip loaded, bundle it into ONE .zip
+  // (much nicer than dozens of separate browser downloads).
   async function downloadVisible() {
     const list = visiblePhotos();
     if (!list.length) { toast("Nothing to download"); return; }
-    toast("Downloading " + list.length + " photo(s)…");
-    for (const photo of list) {
+    if (list.length === 1) {
+      try { await downloadOne(list[0]); }
+      catch (e) { console.error(e); window.open(list[0].url, "_blank"); }
+      return;
+    }
+    if (typeof JSZip !== "undefined") {
+      toast("Zipping " + list.length + " photo(s)…");
       try {
-        const res = await fetch(photo.url);
-        if (!res.ok) throw new Error("fetch failed");
-        const blob = await res.blob();
+        const zip = new JSZip();
+        let n = 0;
+        for (const photo of list) {
+          const res = await fetch(photo.url);
+          if (!res.ok) continue;
+          const blob = await res.blob();
+          n++;
+          const who = photo.uploaderName.replace(/[^a-z0-9]+/gi, "");
+          zip.file("candid-" + n + "-" + who + ".jpg", blob);
+        }
+        const bundle = await zip.generateAsync({ type: "blob" });
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "candid-" + photo.id + ".jpg";
+        a.href = URL.createObjectURL(bundle);
+        a.download = "candid-" + (state.room ? state.room.code : "photos") + ".zip";
         document.body.appendChild(a);
         a.click();
         a.remove();
         URL.revokeObjectURL(a.href);
-      } catch (e) {
-        console.error(e);
-        window.open(photo.url, "_blank");
-      }
+        toast("Saved " + n + " photo(s) as a zip");
+        return;
+      } catch (e) { console.error(e); }
+    }
+    // Fallback: one file at a time.
+    toast("Downloading " + list.length + " photo(s)…");
+    for (const photo of list) {
+      try { await downloadOne(photo); }
+      catch (e) { console.error(e); window.open(photo.url, "_blank"); }
     }
   }
 
@@ -433,7 +556,13 @@
     $("tab-all").addEventListener("click", function () { state.view = "all"; syncToggle(); render(); });
 
     $("btn-add").addEventListener("click", function () { $("file-input").click(); });
-    $("file-input").addEventListener("change", function (e) { addPhotos(e.target.files); e.target.value = ""; });
+    $("file-input").addEventListener("change", function (e) {
+      // Copy the list first: clearing the input's value empties its FileList,
+      // which would otherwise cut off the rest of a multi-photo upload.
+      const files = Array.from(e.target.files);
+      e.target.value = "";
+      addPhotos(files);
+    });
 
     $("btn-download").addEventListener("click", downloadVisible);
     $("btn-me").addEventListener("click", openSelfie);
@@ -446,11 +575,43 @@
 
     $("loupe-prev").addEventListener("click", function () { loupeStep(-1); });
     $("loupe-next").addEventListener("click", function () { loupeStep(1); });
+    $("loupe-download").addEventListener("click", function () {
+      const photo = loupeList[loupeIndex];
+      if (photo) downloadOne(photo).catch(function () { window.open(photo.url, "_blank"); });
+    });
+
+    $("btn-slideshow").addEventListener("click", startSlideshow);
+    $("me-chip").addEventListener("click", function () {
+      state.identity = Names.reroll();
+      renderMe();
+      toast("You're now " + state.identity.name);
+    });
+
+    // Keyboard: arrows to move, Esc to close (also stops a running slideshow).
+    document.addEventListener("keydown", function (e) {
+      if ($("modal-loupe").classList.contains("hidden")) return;
+      if (e.key === "ArrowLeft") loupeStep(-1);
+      else if (e.key === "ArrowRight") loupeStep(1);
+      else if (e.key === "Escape") { stopSlideshow(); hide($("modal-loupe")); }
+    });
+
+    // Swipe left/right on the big photo (mobile). A tap stops a running slideshow.
+    let touchX = null;
+    const limg = $("loupe-img");
+    limg.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+    limg.addEventListener("touchend", function (e) {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) loupeStep(dx < 0 ? 1 : -1);
+      touchX = null;
+    });
+    limg.addEventListener("click", function () { if (slideTimer) stopSlideshow(); });
 
     document.querySelectorAll("[data-close]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         const modal = btn.closest(".modal");
-        if (modal.id === "modal-selfie") closeSelfie(); else hide(modal);
+        if (modal.id === "modal-selfie") closeSelfie();
+        else { stopSlideshow(); hide(modal); }
       });
     });
   }

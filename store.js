@@ -23,18 +23,34 @@ const Store = (function () {
     return result.data.publicUrl;
   }
 
+  // Read a Blob as a base64 data URL. Used as a fallback when Storage uploads
+  // aren't enabled yet, so we can embed the image right in the database row.
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () { resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   // Convert a database row into the photo object the rest of the app uses.
   function rowToPhoto(row) {
+    const path = row.storage_path || "";
+    // Images normally live in Storage (a short path). If uploads aren't enabled,
+    // the image is embedded in the row as a data URL instead — handle both.
+    const url = path.indexOf("data:") === 0 ? path : publicUrl(path);
     return {
       id: row.id,
       uploaderId: row.uploader_id,
       uploaderName: row.uploader_name,
       color: row.color,
-      storagePath: row.storage_path,
-      url: publicUrl(row.storage_path),
+      storagePath: path,
+      url: url,
       takenAt: Number(row.taken_at),
       phash: row.phash,
       sharpness: row.sharpness,
+      createdAt: row.created_at,
     };
   }
 
@@ -53,13 +69,16 @@ const Store = (function () {
     return result.data;
   }
 
-  // Load all photos already in a room.
-  async function loadPhotos(code) {
-    const result = await client
+  // Load photos in a room. Pass `sinceIso` to fetch only ones added after a time
+  // (used by the polling backup so we don't re-download everything each check).
+  async function loadPhotos(code, sinceIso) {
+    let query = client
       .from("photos")
       .select("*")
       .eq("room_code", code)
       .order("created_at", { ascending: true });
+    if (sinceIso) query = query.gt("created_at", sinceIso);
+    const result = await query;
     if (result.error) throw result.error;
     return result.data.map(rowToPhoto);
   }
@@ -70,10 +89,21 @@ const Store = (function () {
     const id = crypto.randomUUID();
     const path = code + "/" + id + ".jpg";
 
+    // Preferred: upload the image to Storage and save just its short path.
+    // Fallback: if Storage uploads are blocked (no policy yet), embed the image
+    // in the row as a data URL so the app still works end to end.
+    let storagePath;
+    let uploadedToStorage = false;
     const upload = await client.storage
       .from(SUPABASE_BUCKET)
       .upload(path, blob, { contentType: "image/jpeg" });
-    if (upload.error) throw upload.error;
+    if (upload.error) {
+      console.warn("Storage upload unavailable; embedding image in the row instead.", upload.error.message);
+      storagePath = await blobToDataUrl(blob);
+    } else {
+      storagePath = path;
+      uploadedToStorage = true;
+    }
 
     const row = {
       id: id,
@@ -81,18 +111,18 @@ const Store = (function () {
       uploader_id: meta.uploaderId,
       uploader_name: meta.uploaderName,
       color: meta.color,
-      storage_path: path,
+      storage_path: storagePath,
       taken_at: meta.takenAt,
       phash: meta.phash,
       sharpness: meta.sharpness,
     };
-    const result = await client.from("photos").insert(row);
+    const result = await client.from("photos").insert(row).select().single();
     if (result.error) {
-      // Don't leave the uploaded file orphaned if saving its info failed.
-      await client.storage.from(SUPABASE_BUCKET).remove([path]);
+      // Don't leave an uploaded file orphaned if saving its info failed.
+      if (uploadedToStorage) await client.storage.from(SUPABASE_BUCKET).remove([path]);
       throw result.error;
     }
-    return rowToPhoto(row);
+    return rowToPhoto(result.data);
   }
 
   // Listen for new photos added to a room by anyone (live updates).

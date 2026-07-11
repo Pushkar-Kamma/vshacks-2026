@@ -42,9 +42,29 @@ const Names = (function () {
     return identity;
   }
 
+  // Give this device a fresh random name + color (keeps the same id). Saved for next time.
+  function reroll() {
+    const current = getIdentity();
+    const next = { id: current.id, name: randomName(), color: randomColor() };
+    localStorage.setItem("candid_identity", JSON.stringify(next));
+    return next;
+  }
+
+  // A fun name for a new session, so it isn't just "Session".
+  const vibes = [
+    "Golden Hour", "Sunset Session", "Rooftop Night", "Beach Day",
+    "Road Trip", "Backyard Hang", "Night Out", "Birthday Bash",
+    "Game Night", "Picnic", "Reunion", "Adventure",
+  ];
+  function randomRoomName() {
+    return vibes[Math.floor(Math.random() * vibes.length)];
+  }
+
   return {
     getIdentity: getIdentity,
     randomName: randomName,
     randomColor: randomColor,
+    reroll: reroll,
+    randomRoomName: randomRoomName,
   };
 })();
