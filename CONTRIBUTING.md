@@ -46,9 +46,9 @@ You can contribute **legitimately** without a laptop:
 - **github.dev** — open the repo in a browser and press <kbd>.</kbd> (or change
   `github.com` → `github.dev` in the URL) for a lightweight VS Code editor.
   Great for small edits + commit.
-- **GitHub Codespaces** — a full VS Code **and dev server** in the browser (works
-  on a phone too). Tap **Code ▸ Codespaces ▸ Create codespace**. It auto-runs
-  `npm install`; then run `npm run dev` and open the forwarded port.
+- **GitHub Codespaces** — a full VS Code in the browser (works on a phone too).
+  Tap **Code ▸ Codespaces ▸ Create codespace**, then open `index.html` with the
+  Live Server extension and use the forwarded port.
 
 **A split that works well:** the two teammates on laptops write most of the code;
 the phone person reviews PRs, writes the README / Devpost text, tracks the
@@ -70,4 +70,4 @@ write the project, and each of us must be able to explain our code, because the
 
 ## 🎨 Style
 - Keep it simple and readable — we each have to explain our code on video.
-- Run `npm run lint` before pushing to catch obvious mistakes.
+- Before pushing, open the page and check the browser console (F12) has no errors.

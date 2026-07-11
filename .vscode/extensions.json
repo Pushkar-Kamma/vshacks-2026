@@ -1,7 +1,6 @@
 {
   "recommendations": [
-    "oxc.oxc-vscode",
-    "dsznajder.es7-react-js-snippets",
+    "ritwickdey.LiveServer",
     "eamodio.gitlens",
     "ms-vsliveshare.vsliveshare",
     "GitHub.copilot",

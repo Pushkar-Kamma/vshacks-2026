@@ -1,20 +1,13 @@
 {
   "name": "vsHacks 2026",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
-  "postCreateCommand": "npm install",
-  "forwardPorts": [5173],
-  "portsAttributes": {
-    "5173": {
-      "label": "Vite dev server",
-      "onAutoForward": "openPreview"
-    }
-  },
+  "forwardPorts": [5500],
   "customizations": {
     "vscode": {
       "extensions": [
-        "oxc.oxc-vscode",
-        "dsznajder.es7-react-js-snippets",
+        "ritwickdey.LiveServer",
         "eamodio.gitlens",
+        "ms-vsliveshare.vsliveshare",
         "GitHub.copilot",
         "GitHub.copilot-chat"
       ]

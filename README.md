@@ -2,49 +2,38 @@
 
 Our team's project for **[vsHacks 2026](https://vshacks-2026.devpost.com/)** — a
 global, beginner-friendly virtual hackathon (July 11–12, 2026). Built with
-**React + Vite**.
+**plain HTML, CSS, and JavaScript** (no framework, no build step).
 
 - 🌐 **Live site:** https://pushkar-kamma.github.io/vshacks-2026/ (auto-deploys from `main`)
 - 🏆 **Devpost:** https://vshacks-2026.devpost.com/
 - 💬 **Discord:** https://discord.gg/fFagbFh45c
-- 🗓️ **Theme:** _TBD — announced at the opening ceremony._ Update this README once we pick our idea!
+- 🗓️ **Theme:** **Automation** — solving a real, repetitive problem. _Update this README with our project name + idea._
 
 ---
 
 ## 🚀 Quick start
 
-You need [Node.js](https://nodejs.org/) 20.19+ or 22.12+ installed.
+No install, no build tools. Two easy ways to run it:
+
+- **Easiest:** double-click `index.html` to open it in your browser.
+- **Best while coding:** install the **Live Server** VS Code extension, then
+  right-click `index.html` → **"Open with Live Server"** (it auto-reloads on save).
 
 ```bash
 git clone https://github.com/Pushkar-Kamma/vshacks-2026.git
 cd vshacks-2026
-npm install
-npm run dev
 ```
 
-Then open the URL it prints (usually http://localhost:5173/). Edit `src/App.jsx`
-and the page updates instantly.
-
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start the local dev server (hot reload) |
-| `npm run build` | Build the production site into `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Check the code with Oxlint |
+Then edit `index.html`, `styles.css`, and `script.js`.
 
 ## 📁 Project structure
 
 ```
 vshacks-2026/
-├─ public/            # static files served as-is
-├─ src/
-│  ├─ App.jsx         # main component — START HERE
-│  ├─ App.css         # styles for App
-│  ├─ main.jsx        # app entry point
-│  └─ index.css       # global styles
-├─ index.html         # HTML shell
-├─ vite.config.js     # Vite config (base is './' for GitHub Pages)
-└─ package.json
+├─ index.html    # the page (markup) — START HERE
+├─ styles.css    # how it looks
+├─ script.js     # how it behaves (vanilla JavaScript)
+└─ README.md
 ```
 
 ## 👥 Team & how we work
