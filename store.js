@@ -87,7 +87,11 @@ const Store = (function () {
       sharpness: meta.sharpness,
     };
     const result = await client.from("photos").insert(row);
-    if (result.error) throw result.error;
+    if (result.error) {
+      // Don't leave the uploaded file orphaned if saving its info failed.
+      await client.storage.from(SUPABASE_BUCKET).remove([path]);
+      throw result.error;
+    }
     return rowToPhoto(row);
   }
 

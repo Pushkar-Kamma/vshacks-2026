@@ -42,17 +42,8 @@ const Names = (function () {
     return identity;
   }
 
-  // Change the display name and save it.
-  function setName(newName) {
-    const identity = getIdentity();
-    identity.name = newName;
-    localStorage.setItem("candid_identity", JSON.stringify(identity));
-    return identity;
-  }
-
   return {
     getIdentity: getIdentity,
-    setName: setName,
     randomName: randomName,
     randomColor: randomColor,
   };

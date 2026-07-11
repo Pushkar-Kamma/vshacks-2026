@@ -2,35 +2,110 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vsHacks 2026 — Automation</title>
-    <meta name="description" content="Our vsHacks 2026 project. Theme: Automation." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Candid — everyone's best photos, together</title>
+    <meta name="description" content="Candid pools everyone's photos and automatically keeps the best — including the ones you're in." />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header">
-      <p class="eyebrow">vsHacks 2026 · Theme: Automation</p>
-      <h1>Project name: TBD</h1>
-    </header>
+    <!-- HOME -->
+    <section id="screen-home" class="screen">
+      <div class="home-inner">
+        <p class="brandmark">Candid</p>
+        <p class="tagline">Everyone's photos from the moment — pooled, cleaned, and instantly yours.</p>
+        <button id="btn-start" class="btn btn-primary">Start a session</button>
+        <div class="join-row">
+          <input id="join-code" class="input" placeholder="Enter code (e.g. SUN-4821)" autocomplete="off" />
+          <button id="btn-join" class="btn btn-ghost">Join</button>
+        </div>
+        <p class="home-foot">No app. No account. Just scan &amp; go.</p>
+      </div>
+    </section>
 
-    <main class="container">
-      <section class="card">
-        <h2>Our starting canvas</h2>
-        <p>
-          This is plain HTML, CSS, and JavaScript — no framework, no build step.
-          Edit <code>index.html</code> for the page, <code>styles.css</code> for
-          the looks, and <code>script.js</code> for the behavior.
-        </p>
-        <button id="demo-button" type="button">Click me</button>
-        <p id="demo-output" aria-live="polite"></p>
-      </section>
-    </main>
+    <!-- ROOM -->
+    <section id="screen-room" class="screen hidden">
+      <header class="room-bar">
+        <div class="room-title">
+          <span id="room-name">Session</span>
+          <span id="room-code" class="room-code"></span>
+        </div>
+        <div class="room-actions">
+          <span id="member-avatars" class="avatars"></span>
+          <button id="btn-invite" class="icon-btn" title="Invite">Invite</button>
+        </div>
+      </header>
 
-    <footer class="site-footer">
-      <a href="https://vshacks-2026.devpost.com/">Devpost</a>
-      <a href="https://github.com/Pushkar-Kamma/vshacks-2026">Repo</a>
-    </footer>
+      <div class="toggle-wrap">
+        <div class="toggle" role="tablist">
+          <button id="tab-best" class="toggle-opt active">⭐ Best <span id="count-best">0</span></button>
+          <button id="tab-all" class="toggle-opt">All <span id="count-all">0</span></button>
+        </div>
+      </div>
 
+      <div id="filter-row" class="filter-row"></div>
+
+      <main id="grid" class="grid"></main>
+      <div id="empty" class="empty hidden">
+        <p>No photos yet.</p>
+        <p class="muted">Tap ➕ to add the first ones.</p>
+      </div>
+
+      <nav class="toolbar">
+        <button id="btn-add" class="tool">➕<span>Add</span></button>
+        <button id="btn-me" class="tool">📸<span>Photos of me</span></button>
+        <button id="btn-download" class="tool">⬇<span>Download</span></button>
+      </nav>
+      <input id="file-input" type="file" accept="image/*" multiple hidden />
+    </section>
+
+    <!-- INVITE / QR -->
+    <div id="modal-qr" class="modal hidden">
+      <div class="modal-card">
+        <button class="modal-close" data-close>✕</button>
+        <h2>Invite your crew</h2>
+        <div id="qr" class="qr"></div>
+        <p class="room-code big" id="qr-code"></p>
+        <button id="btn-copy" class="btn btn-ghost">Copy link</button>
+      </div>
+    </div>
+
+    <!-- LOUPE -->
+    <div id="modal-loupe" class="modal loupe hidden">
+      <button class="modal-close" data-close>✕</button>
+      <button id="loupe-prev" class="loupe-nav prev">‹</button>
+      <img id="loupe-img" class="loupe-img" alt="" />
+      <button id="loupe-next" class="loupe-nav next">›</button>
+      <div class="loupe-info">
+        <span id="loupe-owner"></span>
+        <button id="loupe-angles" class="chip hidden"></button>
+      </div>
+    </div>
+
+    <!-- PHOTOS OF YOU -->
+    <div id="modal-selfie" class="modal hidden">
+      <div class="modal-card">
+        <button class="modal-close" data-close>✕</button>
+        <h2>Find photos of you</h2>
+        <p class="muted">Take a quick selfie. It stays on your device and is used only to find your photos.</p>
+        <video id="selfie-video" class="selfie-video" autoplay playsinline muted></video>
+        <button id="btn-capture" class="btn btn-primary">Capture</button>
+        <p id="selfie-status" class="muted"></p>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
+
+    <!-- Our code -->
+    <script src="supabase-config.js"></script>
+    <script src="curate.js"></script>
+    <script src="names.js"></script>
+    <script src="store.js"></script>
+    <script src="faces.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
