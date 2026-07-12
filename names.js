@@ -50,6 +50,14 @@ const Names = (function () {
     return next;
   }
 
+  // Set a custom display name (keeps the same id + colour). Saved for next time.
+  function setName(name) {
+    const current = getIdentity();
+    const next = { id: current.id, name: name, color: current.color };
+    localStorage.setItem("candid_identity", JSON.stringify(next));
+    return next;
+  }
+
   // A fun name for a new session, so it isn't just "Session".
   const vibes = [
     "Golden Hour", "Sunset Session", "Rooftop Night", "Beach Day",
@@ -65,6 +73,7 @@ const Names = (function () {
     randomName: randomName,
     randomColor: randomColor,
     reroll: reroll,
+    setName: setName,
     randomRoomName: randomRoomName,
   };
 })();

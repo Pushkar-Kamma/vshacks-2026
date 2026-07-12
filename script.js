@@ -21,6 +21,7 @@
     hide($("screen-home"));
     hide($("screen-room"));
     show($("screen-" + name));
+    document.body.classList.toggle("in-room", name === "room");
   }
 
   function initials(name) {
@@ -363,11 +364,48 @@
     });
   }
 
-  // Show who "you" are in the room bar (tap the chip to reroll).
+  // Show who "you" are in the room bar (click the chip to rename yourself).
   function renderMe() {
     $("me-dot").style.background = state.identity.color;
-    $("me-name").textContent = state.identity.name.split(" ")[0];
-    $("me-chip").title = "You're " + state.identity.name + " — tap to change";
+    $("me-name").textContent = state.identity.name;
+    $("me-chip").title = "You're " + state.identity.name + " — click to rename";
+  }
+
+  // Click your name to rename yourself — inline, with the text selected, like
+  // renaming a file. Enter saves, Escape cancels.
+  function startRename() {
+    const chip = $("me-chip");
+    const nameSpan = $("me-name");
+    if (chip.querySelector(".me-rename")) return;
+    chip.classList.add("editing");
+    nameSpan.style.display = "none";
+    const input = document.createElement("input");
+    input.className = "me-rename";
+    input.type = "text";
+    input.maxLength = 22;
+    input.value = state.identity.name;
+    chip.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    function finish(save) {
+      if (done) return;
+      done = true;
+      const value = input.value.trim();
+      input.remove();
+      nameSpan.style.display = "";
+      chip.classList.remove("editing");
+      if (save && value) {
+        state.identity = Names.setName(value);
+        renderMe();
+        toast("You're now " + state.identity.name);
+      }
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") finish(true);
+      else if (e.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", function () { finish(true); });
   }
 
   // The "automation" headline: how many photos we pooled, kept, and tidied.
@@ -735,10 +773,10 @@
 
     $("btn-leave").addEventListener("click", leaveRoom);
     $("btn-slideshow").addEventListener("click", startSlideshow);
-    $("me-chip").addEventListener("click", function () {
-      state.identity = Names.reroll();
-      renderMe();
-      toast("You're now " + state.identity.name);
+    $("me-chip").addEventListener("click", startRename);
+    $("me-chip").addEventListener("keydown", function (e) {
+      if (e.target !== e.currentTarget) return; // ignore keys from the input inside
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startRename(); }
     });
 
     // Keyboard: arrows to move, Esc to close (also stops a running slideshow).
