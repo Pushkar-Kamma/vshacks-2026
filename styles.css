@@ -157,34 +157,44 @@ body {
 .tool-add:active { transform: scale(.98); }
 #screen-room { padding-bottom: 96px; }
 
-/* Living aurora behind the room so blank space glows instead of reading as dead-flat black.
-   Two counter-drifting layers give it gentle depth and motion. */
+/* Flowing aurora behind the room. A big teal gradient slowly pans, so the
+   background gently moves. Because the colour lives in the gradient STOPS (not
+   in viewport-sized blobs), it stays equally rich on a phone and a wide desktop. */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   opacity: 0; transition: opacity .8s ease;
-  background:
-    radial-gradient(58vw 56vh at 14% 6%,  hsl(197 58% 40% / .42), transparent 60%),
-    radial-gradient(52vw 54vh at 86% 16%, hsl(191 55% 34% / .34), transparent 60%),
-    radial-gradient(54vw 58vh at 82% 94%, hsl(198 62% 32% / .40), transparent 62%),
-    radial-gradient(48vw 50vh at 18% 90%, hsl(188 52% 30% / .30), transparent 62%);
-  animation: roomDrift 30s ease-in-out infinite alternate;
+  background: linear-gradient(
+    125deg,
+    hsl(200 60% 7%)  0%,
+    hsl(198 60% 13%) 20%,
+    hsl(197 56% 23%) 38%,
+    hsl(191 52% 15%) 55%,
+    hsl(198 58% 22%) 73%,
+    hsl(200 60% 8%) 100%
+  );
+  background-size: 300% 300%;
+  background-repeat: no-repeat;
+  animation: auroraFlow 26s ease-in-out infinite alternate;
 }
+/* Soft drifting accents (a teal lift + a faint warm spark) for organic depth. */
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   opacity: 0; transition: opacity .8s ease;
   background:
-    radial-gradient(42vw 44vh at 60% 40%, hsl(197 60% 46% / .22), transparent 60%),
-    radial-gradient(36vw 38vh at 30% 62%, hsl(39 72% 50% / .07), transparent 60%);
-  animation: roomDrift2 38s ease-in-out infinite alternate;
+    radial-gradient(55% 55% at 22% 20%, hsl(197 62% 48% / .20), transparent 60%),
+    radial-gradient(50% 50% at 82% 82%, hsl(39 72% 52% / .07), transparent 60%);
+  background-size: 165% 165%;
+  background-repeat: no-repeat;
+  animation: auroraFlow2 34s ease-in-out infinite alternate;
 }
 body.in-room::before, body.in-room::after { opacity: 1; }
-@keyframes roomDrift {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(30px, -26px) scale(1.08); }
+@keyframes auroraFlow {
+  from { background-position: 0% 50%; }
+  to   { background-position: 100% 50%; }
 }
-@keyframes roomDrift2 {
-  from { transform: translate(0, 0) scale(1.05); }
-  to   { transform: translate(-34px, 20px) scale(1); }
+@keyframes auroraFlow2 {
+  from { background-position: 10% 0%; }
+  to   { background-position: 90% 100%; }
 }
 
 /* ---------- Modals ---------- */
