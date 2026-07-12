@@ -197,35 +197,47 @@
   }
 
   // ---------- adding photos ----------
+  // Process one file end to end: analyze, shrink, upload, add to the gallery.
+  async function processPhoto(file) {
+    const img = await fileToImage(file);
+    const features = Curate.analyzePhoto(img);
+    const scene = Curate.analyzeScene(img);
+    const blob = await downscaleToBlob(img, 1200, 0.72);
+    URL.revokeObjectURL(img.src);
+    const saved = await Store.addPhoto(state.room.code, {
+      uploaderId: state.identity.id,
+      uploaderName: state.identity.name,
+      color: state.identity.color,
+      takenAt: file.lastModified || Date.now(),
+      phash: features.phash,
+      sharpness: features.sharpness,
+    }, blob);
+    saved.scene = scene;
+    if (addToState(saved)) { trackSeen([saved]); render(); }
+  }
+
   async function addPhotos(files) {
-    if (!files || !files.length) return;
-    toast("Adding " + files.length + " photo(s)…");
+    const images = Array.from(files).filter(function (f) { return f.type && f.type.indexOf("image/") === 0; });
+    if (!images.length) return;
+    toast("Adding " + images.length + " photo(s)…");
     let added = 0;
     let failed = 0;
-    for (const file of files) {
-      if (!file.type || file.type.indexOf("image/") !== 0) continue;
-      try {
-        const img = await fileToImage(file);
-        const features = Curate.analyzePhoto(img);
-        const scene = Curate.analyzeScene(img);
-        const blob = await downscaleToBlob(img, 1200, 0.72);
-        URL.revokeObjectURL(img.src);
-        const saved = await Store.addPhoto(state.room.code, {
-          uploaderId: state.identity.id,
-          uploaderName: state.identity.name,
-          color: state.identity.color,
-          takenAt: file.lastModified || Date.now(),
-          phash: features.phash,
-          sharpness: features.sharpness,
-        }, blob);
-        saved.scene = scene;
-        if (addToState(saved)) { trackSeen([saved]); render(); }
-        added++;
-      } catch (e) {
-        console.error(e);
-        failed++;
+    let index = 0;
+
+    // Upload a few at a time (a small pool) so a big batch finishes much faster
+    // than doing them strictly one-by-one.
+    async function worker() {
+      while (index < images.length) {
+        const file = images[index++];
+        try { await processPhoto(file); added++; }
+        catch (e) { console.error(e); failed++; }
       }
     }
+    const pool = [];
+    const concurrency = Math.min(4, images.length);
+    for (let i = 0; i < concurrency; i++) pool.push(worker());
+    await Promise.all(pool);
+
     toast("Added " + added + (failed ? ", " + failed + " skipped (try JPEG)" : ""));
   }
 
@@ -591,6 +603,18 @@
     }
     hide($("modal-selfie"));
   }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  // Average several 128-number faceprints into one steadier faceprint.
+  function averageDescriptors(list) {
+    const out = new Float32Array(list[0].length);
+    for (const d of list) {
+      for (let i = 0; i < out.length; i++) out[i] += d[i];
+    }
+    for (let i = 0; i < out.length; i++) out[i] /= list.length;
+    return out;
+  }
+
   async function captureSelfie() {
     const status = $("selfie-status");
     const btn = $("btn-capture");
@@ -601,12 +625,20 @@
       if (!okReady) { status.textContent = "Face matching unavailable right now."; return; }
       const video = $("selfie-video");
       const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 320;
-      canvas.height = video.videoHeight || 240;
-      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-      status.textContent = "Finding your face…";
-      const myFace = await Faces.describe(canvas);
-      if (!myFace) { status.textContent = "No face found — try again."; return; }
+      const ctx = canvas.getContext("2d");
+      // Take a few quick shots and average them for a steadier faceprint.
+      const shots = [];
+      for (let k = 0; k < 3; k++) {
+        status.textContent = "Scanning your face — hold still (" + (k + 1) + "/3)";
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const d = await Faces.describe(canvas);
+        if (d) shots.push(d);
+        await sleep(300);
+      }
+      if (!shots.length) { status.textContent = "No face found — try again in better light."; return; }
+      const myFace = shots.length > 1 ? averageDescriptors(shots) : shots[0];
       const matches = new Set();
       let i = 0;
       for (const photo of state.photos) {
@@ -624,7 +656,7 @@
       syncToggle();
       closeSelfie();
       render();
-      toast("Found " + matches.size + " photo(s) of you");
+      toast(matches.size ? "Found " + matches.size + " photo(s) of you" : "No photos of you found yet");
     } catch (e) {
       console.error(e);
       status.textContent = "Something went wrong — try again.";
