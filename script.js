@@ -290,8 +290,10 @@
     const grid = $("grid");
     const list = visiblePhotos();
 
+    const total = state.photos.length;
     $("count-best").textContent = state.photos.filter(function (p) { return p.isBest; }).length;
-    $("count-all").textContent = state.photos.length;
+    $("count-all").textContent = total;
+    if (state.room) $("room-code").textContent = state.room.code + " · " + total + (total === 1 ? " photo" : " photos");
     const empty = $("empty");
     if (state.photos.length === 0) {
       empty.innerHTML = "<div class='empty-icon'>📷</div><p>No photos yet.</p><p class='muted'>Tap “Add Photos” to start the pool.</p>";
@@ -317,7 +319,6 @@
 
     renderAvatars();
     renderFilters();
-    renderStats();
     classifyScenes();
 
     grid.innerHTML = "";
@@ -334,10 +335,6 @@
         star.textContent = "⭐";
         tile.appendChild(star);
       }
-      const dot = document.createElement("span");
-      dot.className = "owner-dot";
-      dot.style.background = photo.color;
-      tile.appendChild(dot);
       const size = groupSize(photo.groupId);
       if (state.view === "best" && size > 1) {
         const dup = document.createElement("span");

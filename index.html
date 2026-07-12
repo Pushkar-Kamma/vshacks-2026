@@ -53,16 +53,18 @@
         </div>
       </header>
 
-      <div class="toggle-wrap">
+      <div class="controls">
         <div class="toggle" role="tablist">
           <span class="toggle-glide" aria-hidden="true"></span>
           <button id="tab-best" class="toggle-opt active">⭐ Best <span id="count-best">0</span></button>
           <button id="tab-all" class="toggle-opt">All <span id="count-all">0</span></button>
         </div>
-        <button id="btn-slideshow" class="play-btn" title="Play a slideshow">▶</button>
+        <div class="control-actions">
+          <button id="btn-me" class="ctl-btn" title="Photos of you">📸</button>
+          <button id="btn-slideshow" class="ctl-btn" title="Play a slideshow">▶</button>
+          <button id="btn-download" class="ctl-btn" title="Download">⬇</button>
+        </div>
       </div>
-
-      <p id="stats" class="stats hidden"></p>
 
       <div id="filter-row" class="filter-row"></div>
 
@@ -73,11 +75,7 @@
       </div>
 
       <nav class="toolbar">
-        <div class="toolbar-inner">
-          <button id="btn-add" class="tool-add">➕ Add Photos</button>
-          <button id="btn-me" class="tool-icon" title="Photos of me">📸</button>
-          <button id="btn-download" class="tool-icon" title="Download">⬇</button>
-        </div>
+        <button id="btn-add" class="tool-add">＋ Add photos</button>
       </nav>
       <input id="file-input" type="file" accept="image/*" multiple hidden />
     </section>
