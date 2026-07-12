@@ -136,6 +136,9 @@ body {
 
 /* ---------- Grid ---------- */
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; flex: 1; align-content: start; }
+/* When there are no tiles, don't let the grid grow — that lets the empty-state
+   message use its auto margins to truly centre in the leftover space. */
+.grid:empty { flex: 0; padding: 0; }
 /* On wider screens, add columns so photos fill the width at a sensible size
    instead of a few giant tiles. */
 @media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
@@ -147,9 +150,33 @@ body {
 .tile .owner-dot { position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
 .tile .dup { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
 
-.empty { text-align: center; margin: auto; padding: 40px; color: var(--muted); }
-.empty .empty-icon { width: 76px; height: 76px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px; }
-.empty p { margin: 4px 0; }
+/* Empty state — big, centred, and scales with the device. Sizes use the SMALLER
+   of width/height (min(vw, vh)) so it grows on big screens but never overflows short ones. */
+.empty {
+  margin: auto;                       /* centres it both ways in the leftover room space */
+  max-width: min(560px, 90vw);
+  padding: clamp(14px, 3vh, 36px) clamp(20px, 5vw, 48px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; color: var(--muted);
+}
+.empty .empty-icon {
+  width: clamp(80px, min(22vw, 20vh), 168px);
+  height: clamp(80px, min(22vw, 20vh), 168px);
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(40px, min(11vw, 10vh), 76px);
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+.empty p { margin: 0; }
+.empty p:not(.muted) {                /* the “No photos yet.” headline */
+  font-size: clamp(20px, 4.6vw, 30px);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: clamp(4px, 1vw, 8px);
+}
+.empty .muted { font-size: clamp(14px, 3.4vw, 18px); line-height: 1.5; }
 
 /* ---------- Floating toolbar ---------- */
 .toolbar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; padding: 16px; z-index: 15; background: linear-gradient(to top, var(--bg) 35%, transparent); }
