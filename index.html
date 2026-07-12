@@ -7,7 +7,7 @@
     <meta name="description" content="Candid pools everyone's photos and automatically keeps the best — including the ones you're in." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -18,19 +18,12 @@
         <div class="blob b2"></div>
         <div class="blob b3"></div>
       </div>
-      <div class="scatter" aria-hidden="true">
-        <div class="scatter-card" style="--rot:-14deg; --delay:.10s; top:8%; left:4%;">🏖️</div>
-        <div class="scatter-card" style="--rot:11deg; --delay:.18s; top:11%; right:5%;">🌄</div>
-        <div class="scatter-card" style="--rot:-8deg; --delay:.26s; top:34%; left:2%;">🎉</div>
-        <div class="scatter-card" style="--rot:16deg; --delay:.14s; top:38%; right:3%;">🥂</div>
-        <div class="scatter-card" style="--rot:-11deg; --delay:.22s; bottom:22%; left:5%;">🌿</div>
-        <div class="scatter-card" style="--rot:9deg; --delay:.30s; bottom:16%; right:4%;">🎆</div>
-        <div class="scatter-card" style="--rot:-6deg; --delay:.34s; bottom:30%; right:13%;">📸</div>
-      </div>
+      <div id="photo-stream" class="photo-stream" aria-hidden="true"></div>
+      <div class="hero-veil" aria-hidden="true"></div>
       <div class="home-inner">
         <div class="hero-head">
           <h1 class="brandmark">Candid</h1>
-          <p class="tagline">Everyone's photos, pooled and cleaned up —<br />no more "send me the pics."</p>
+          <p class="tagline">The group album that makes itself.</p>
         </div>
         <button id="btn-start" class="btn btn-primary">Start a session →</button>
         <div class="join-row">

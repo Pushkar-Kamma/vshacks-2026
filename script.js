@@ -770,8 +770,64 @@
     });
   }
 
+  // ---------- home hero animation ----------
+  function initHero() {
+    buildPhotoStream();
+    shuffleWordmark();
+  }
+
+  // Real photos that drift gently up the screen behind the hero (clipped, so
+  // they never cause scrolling). Falls back to teal cards if images don't load.
+  function buildPhotoStream() {
+    const stream = $("photo-stream");
+    if (!stream) return;
+    const count = window.innerWidth > 700 ? 14 : 7;
+    for (let i = 0; i < count; i++) {
+      const card = document.createElement("div");
+      card.className = "float-card";
+      const w = 80 + Math.floor(Math.random() * 80);
+      const dur = 16 + Math.floor(Math.random() * 16);
+      const delay = -Math.floor(Math.random() * dur);
+      const rot = Math.floor(Math.random() * 16) - 8;
+      const op = 0.4 + Math.random() * 0.25;
+      card.style.left = Math.floor(Math.random() * 90) + "%";
+      card.style.setProperty("--w", w + "px");
+      card.style.setProperty("--dur", dur + "s");
+      card.style.setProperty("--rot", rot + "deg");
+      card.style.setProperty("--op", op.toFixed(2));
+      card.style.animationDelay = delay + "s";
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = "";
+      img.src = "https://picsum.photos/seed/candid" + i + "/240/320";
+      card.appendChild(img);
+      stream.appendChild(card);
+    }
+  }
+
+  // "Candid" flickers through a few fonts on load, then settles on the display font.
+  function shuffleWordmark() {
+    const el = document.querySelector(".brandmark");
+    if (!el) return;
+    const fonts = [
+      "Georgia, serif", "'Courier New', monospace", "Impact, sans-serif",
+      "'Comic Sans MS', cursive", "'Times New Roman', serif",
+      "Verdana, sans-serif", "'Trebuchet MS', sans-serif",
+    ];
+    let ticks = 0;
+    const timer = setInterval(function () {
+      el.style.fontFamily = fonts[Math.floor(Math.random() * fonts.length)];
+      ticks++;
+      if (ticks >= 16) {
+        clearInterval(timer);
+        el.style.fontFamily = "";
+      }
+    }, 65);
+  }
+
   function init() {
     bind();
+    initHero();
     const room = new URLSearchParams(location.search).get("room");
     if (room) joinSession(room); else showScreen("home");
   }
