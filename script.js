@@ -638,6 +638,7 @@
   async function openSelfie() {
     show($("modal-selfie"));
     $("selfie-status").textContent = "";
+    Faces.ensureReady();
     try {
       selfieStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       $("selfie-video").srcObject = selfieStream;
@@ -671,7 +672,7 @@
     try {
       status.textContent = "Loading face models…";
       const okReady = await Faces.ensureReady();
-      if (!okReady) { status.textContent = "Face matching unavailable right now."; return; }
+      if (!okReady) { status.textContent = "Couldn’t load face matching — check your connection and try again."; return; }
       const video = $("selfie-video");
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");

@@ -10,10 +10,25 @@ const Faces = (function () {
   // How close two faces must be to count as the same person (lower = stricter).
   const THRESHOLD = 0.55;
 
+  // Wait until the face-api library (a big, deferred CDN script) has loaded,
+  // or give up after `timeout` ms. This stops us reporting "unavailable" just
+  // because someone tapped Scan before the ~1.3 MB library finished loading.
+  function waitForFaceapi(timeout) {
+    return new Promise(function (resolve) {
+      if (typeof faceapi !== "undefined") { resolve(true); return; }
+      const start = Date.now();
+      const timer = setInterval(function () {
+        if (typeof faceapi !== "undefined") { clearInterval(timer); resolve(true); }
+        else if (Date.now() - start > timeout) { clearInterval(timer); resolve(false); }
+      }, 150);
+    });
+  }
+
   // Load the models once, on first use. Returns false if unavailable.
   async function ensureReady() {
     if (ready) return true;
-    if (typeof faceapi === "undefined") return false;
+    const libLoaded = await waitForFaceapi(8000);
+    if (!libLoaded) return false;
     try {
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
