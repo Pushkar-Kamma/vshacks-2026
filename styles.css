@@ -157,20 +157,34 @@ body {
 .tool-add:active { transform: scale(.98); }
 #screen-room { padding-bottom: 96px; }
 
-/* Subtle drifting glow behind the room so blank space isn't dead-flat. */
+/* Living aurora behind the room so blank space glows instead of reading as dead-flat black.
+   Two counter-drifting layers give it gentle depth and motion. */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  opacity: 0; transition: opacity .6s ease;
+  opacity: 0; transition: opacity .8s ease;
   background:
-    radial-gradient(62vw 58vh at 15% 10%, hsl(197 55% 26% / .26), transparent 62%),
-    radial-gradient(58vw 60vh at 85% 86%, hsl(194 53% 22% / .22), transparent 62%),
-    radial-gradient(46vw 46vh at 55% 58%, hsl(39 62% 42% / .06), transparent 60%);
-  animation: roomDrift 26s ease-in-out infinite alternate;
+    radial-gradient(58vw 56vh at 14% 6%,  hsl(197 58% 40% / .42), transparent 60%),
+    radial-gradient(52vw 54vh at 86% 16%, hsl(191 55% 34% / .34), transparent 60%),
+    radial-gradient(54vw 58vh at 82% 94%, hsl(198 62% 32% / .40), transparent 62%),
+    radial-gradient(48vw 50vh at 18% 90%, hsl(188 52% 30% / .30), transparent 62%);
+  animation: roomDrift 30s ease-in-out infinite alternate;
 }
-body.in-room::before { opacity: 1; }
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity .8s ease;
+  background:
+    radial-gradient(42vw 44vh at 60% 40%, hsl(197 60% 46% / .22), transparent 60%),
+    radial-gradient(36vw 38vh at 30% 62%, hsl(39 72% 50% / .07), transparent 60%);
+  animation: roomDrift2 38s ease-in-out infinite alternate;
+}
+body.in-room::before, body.in-room::after { opacity: 1; }
 @keyframes roomDrift {
   from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(26px, -24px) scale(1.06); }
+  to   { transform: translate(30px, -26px) scale(1.08); }
+}
+@keyframes roomDrift2 {
+  from { transform: translate(0, 0) scale(1.05); }
+  to   { transform: translate(-34px, 20px) scale(1); }
 }
 
 /* ---------- Modals ---------- */
