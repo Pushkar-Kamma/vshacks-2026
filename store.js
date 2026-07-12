@@ -125,8 +125,11 @@ const Store = (function () {
     return rowToPhoto(result.data);
   }
 
-  // Listen for new photos added to a room by anyone (live updates).
-  function subscribe(code, onInsert) {
+  // Listen for photos added or removed in a room by anyone (live updates).
+  // INSERTs are filtered to this room. DELETEs can't be filtered (the delete
+  // payload only carries the id), so we forward every delete and the caller
+  // ignores ids it doesn't have.
+  function subscribe(code, onInsert, onDelete) {
     return client
       .channel("room-" + code)
       .on(
@@ -134,6 +137,13 @@ const Store = (function () {
         { event: "INSERT", schema: "public", table: "photos", filter: "room_code=eq." + code },
         function (payload) {
           onInsert(rowToPhoto(payload.new));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "photos" },
+        function (payload) {
+          if (onDelete && payload.old && payload.old.id) onDelete(payload.old.id);
         }
       )
       .subscribe();

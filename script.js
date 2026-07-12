@@ -113,7 +113,7 @@
     renderMe();
     showScreen("room");
     history.replaceState(null, "", "?room=" + code);
-    state.channel = Store.subscribe(code, onInsert);
+    state.channel = Store.subscribe(code, onInsert, onRemove);
     const existing = await Store.loadPhotos(code);
     existing.forEach(addToState);
     trackSeen(existing);
@@ -149,6 +149,20 @@
         toast(photo.uploaderName + " added a photo");
       }
     }
+  }
+
+  // Someone (another device, or us) deleted a photo — drop it live everywhere.
+  function onRemove(id) {
+    if (!state.byId[id]) return;
+    delete state.byId[id];
+    state.photos = state.photos.filter(function (p) { return p.id !== id; });
+    const wasInLoupe = loupeList.some(function (p) { return p.id === id; });
+    loupeList = loupeList.filter(function (p) { return p.id !== id; });
+    if (wasInLoupe) {
+      if (loupeList.length === 0) { stopSlideshow(); hide($("modal-loupe")); }
+      else { if (loupeIndex >= loupeList.length) loupeIndex = loupeList.length - 1; renderLoupe(); }
+    }
+    render();
   }
 
   // Remember the newest photo time we've seen, so polling only asks for newer ones.
