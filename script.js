@@ -294,6 +294,10 @@
     $("count-best").textContent = state.photos.filter(function (p) { return p.isBest; }).length;
     $("count-all").textContent = total;
     if (state.room) $("room-code").textContent = state.room.code + " · " + total + (total === 1 ? " photo" : " photos");
+    // An empty room has nothing to sort or filter, so hide those bars until there are photos.
+    const controlsEl = document.querySelector(".controls");
+    if (controlsEl) controlsEl.style.display = total ? "" : "none";
+    $("filter-row").style.display = total ? "" : "none";
     const empty = $("empty");
     if (state.photos.length === 0) {
       empty.innerHTML = "<div class='empty-icon'>📷</div><p>No photos yet.</p><p class='muted'>Tap “Add Photos” to start the pool.</p>";
@@ -351,6 +355,7 @@
     const wrap = $("member-avatars");
     wrap.innerHTML = "";
     Object.keys(state.members).forEach(function (id) {
+      if (id === state.identity.id) return; // you're already shown as the "me" chip
       const m = state.members[id];
       const a = document.createElement("span");
       a.className = "avatar";
