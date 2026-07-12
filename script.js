@@ -72,6 +72,7 @@
     filter: { type: "none" },
     meIds: null,
     lastSeen: null,
+    channel: null,
   };
 
   // ---------- rooms ----------
@@ -101,7 +102,7 @@
     renderMe();
     showScreen("room");
     history.replaceState(null, "", "?room=" + code);
-    Store.subscribe(code, onInsert);
+    state.channel = Store.subscribe(code, onInsert);
     const existing = await Store.loadPhotos(code);
     existing.forEach(addToState);
     trackSeen(existing);
@@ -109,7 +110,27 @@
     startPolling();
   }
 
+  // Leave the room and go back home (used by the ‹ button).
+  function leaveRoom() {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    if (state.channel) { try { state.channel.unsubscribe(); } catch (e) {} state.channel = null; }
+    state.room = null;
+    state.photos = [];
+    state.byId = {};
+    state.members = {};
+    state.filter = { type: "none" };
+    state.view = "best";
+    state.meIds = null;
+    state.lastSeen = null;
+    syncToggle();
+    history.replaceState(null, "", location.pathname);
+    showScreen("home");
+    $("join-code").value = "";
+  }
+
   function onInsert(photo) {
+    if (!state.room) return;
     if (addToState(photo)) {
       trackSeen([photo]);
       render();
@@ -432,6 +453,32 @@
     $("modal-loupe").classList.remove("playing");
   }
 
+  // ---------- delete ----------
+  // Remove the photo currently open in the loupe (for everyone).
+  async function deleteCurrent() {
+    const photo = loupeList[loupeIndex];
+    if (!photo) return;
+    if (!confirm("Delete this photo for everyone? This can't be undone.")) return;
+    try {
+      await Store.deletePhoto(photo.id, photo.storagePath);
+      delete state.byId[photo.id];
+      state.photos = state.photos.filter(function (p) { return p.id !== photo.id; });
+      loupeList = loupeList.filter(function (p) { return p.id !== photo.id; });
+      toast("Photo deleted");
+      if (loupeList.length === 0) {
+        stopSlideshow();
+        hide($("modal-loupe"));
+      } else {
+        if (loupeIndex >= loupeList.length) loupeIndex = loupeList.length - 1;
+        renderLoupe();
+      }
+      render();
+    } catch (e) {
+      console.error(e);
+      toast("Couldn't delete — try again");
+    }
+  }
+
   // ---------- download ----------
   // Download a single photo as a file.
   async function downloadOne(photo) {
@@ -603,7 +650,9 @@
       const photo = loupeList[loupeIndex];
       if (photo) downloadOne(photo).catch(function () { window.open(photo.url, "_blank"); });
     });
+    $("loupe-delete").addEventListener("click", deleteCurrent);
 
+    $("btn-leave").addEventListener("click", leaveRoom);
     $("btn-slideshow").addEventListener("click", startSlideshow);
     $("me-chip").addEventListener("click", function () {
       state.identity = Names.reroll();

@@ -44,9 +44,12 @@
     <!-- ROOM -->
     <section id="screen-room" class="screen hidden">
       <header class="room-bar">
-        <div class="room-title">
-          <span id="room-name">Session</span>
-          <span id="room-code" class="room-code"></span>
+        <div class="room-left">
+          <button id="btn-leave" class="leave-btn" title="Leave session" aria-label="Leave session">‹</button>
+          <div class="room-title">
+            <span id="room-name">Session</span>
+            <span id="room-code" class="room-code"></span>
+          </div>
         </div>
         <div class="room-actions">
           <button id="me-chip" class="me-chip" title="Tap to change your name & color">
@@ -107,6 +110,7 @@
         <span id="loupe-owner"></span>
         <button id="loupe-angles" class="chip hidden"></button>
         <button id="loupe-download" class="chip">⬇ Save</button>
+        <button id="loupe-delete" class="chip">🗑 Delete</button>
       </div>
     </div>
 

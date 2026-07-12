@@ -139,11 +139,22 @@ const Store = (function () {
       .subscribe();
   }
 
+  // Delete one photo everywhere: its image (if in Storage) and its database row.
+  async function deletePhoto(id, storagePath) {
+    if (storagePath && storagePath.indexOf("data:") !== 0) {
+      try { await client.storage.from(SUPABASE_BUCKET).remove([storagePath]); }
+      catch (e) { console.warn("storage remove failed", e); }
+    }
+    const result = await client.from("photos").delete().eq("id", id);
+    if (result.error) throw result.error;
+  }
+
   return {
     createRoom: createRoom,
     getRoom: getRoom,
     loadPhotos: loadPhotos,
     addPhoto: addPhoto,
     subscribe: subscribe,
+    deletePhoto: deletePhoto,
   };
 })();
