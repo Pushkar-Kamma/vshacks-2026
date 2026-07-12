@@ -29,3 +29,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Teammate's Replit UI design — kept locally as reference, not part of the deployed app
+CANDID/
+CANDID.zip
