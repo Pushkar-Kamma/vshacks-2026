@@ -198,6 +198,7 @@
   // ---------- rendering ----------
   function visiblePhotos() {
     Curate.curate(state.photos);
+    validateFilter();
     let list = state.photos.slice();
     if (state.view === "best") list = list.filter(function (p) { return p.isBest; });
     const f = state.filter;
@@ -205,6 +206,17 @@
     if (f.type === "moment") list = list.filter(function (p) { return p.momentId === f.id; });
     if (f.type === "me" && state.meIds) list = list.filter(function (p) { return state.meIds.has(p.id); });
     return list;
+  }
+
+  // Drop a filter that no longer matches any photo (prevents a stuck empty screen).
+  function validateFilter() {
+    const f = state.filter;
+    if (f.type === "person" && !state.photos.some(function (p) { return p.uploaderId === f.id; })) {
+      state.filter = { type: "none" };
+    }
+    if (f.type === "moment" && !state.photos.some(function (p) { return p.momentId === f.id; })) {
+      state.filter = { type: "none" };
+    }
   }
 
   function groupSize(groupId) {
@@ -224,7 +236,19 @@
       empty.innerHTML = "<div class='empty-icon'>📷</div><p>No photos yet.</p><p class='muted'>Tap “Add Photos” to start the pool.</p>";
       show(empty);
     } else if (list.length === 0) {
-      empty.innerHTML = "<div class='empty-icon'>🔍</div><p>Nothing here.</p><p class='muted'>Try a different filter or the All tab.</p>";
+      empty.innerHTML = "<div class='empty-icon'>🔍</div><p>Nothing here.</p><p class='muted'>No photos match this filter.</p>";
+      const clearBtn = document.createElement("button");
+      clearBtn.className = "btn btn-ghost";
+      clearBtn.textContent = "Show all photos";
+      clearBtn.style.marginTop = "14px";
+      clearBtn.addEventListener("click", function () {
+        state.filter = { type: "none" };
+        state.view = "all";
+        state.meIds = null;
+        syncToggle();
+        render();
+      });
+      empty.appendChild(clearBtn);
       show(empty);
     } else {
       hide(empty);
@@ -544,8 +568,6 @@
   function syncToggle() {
     $("tab-best").classList.toggle("active", state.view === "best");
     $("tab-all").classList.toggle("active", state.view === "all");
-    const toggle = document.querySelector(".toggle");
-    if (toggle) toggle.classList.toggle("on-all", state.view === "all");
   }
 
   // ---------- wire up ----------
