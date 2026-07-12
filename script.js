@@ -776,32 +776,43 @@
     shuffleWordmark();
   }
 
-  // Real photos that drift gently up the screen behind the hero (clipped, so
-  // they never cause scrolling). Falls back to teal cards if images don't load.
+  // Real photos that drift gently up the screen behind the hero. Uses evenly
+  // spaced lanes (so photos cover the full width, not clustered on one side) and
+  // staggers each lane in time (so the flow stays even — no clumps or empty gaps).
   function buildPhotoStream() {
     const stream = $("photo-stream");
     if (!stream) return;
-    const count = window.innerWidth > 700 ? 14 : 7;
-    for (let i = 0; i < count; i++) {
-      const card = document.createElement("div");
-      card.className = "float-card";
-      const w = 80 + Math.floor(Math.random() * 80);
-      const dur = 16 + Math.floor(Math.random() * 16);
-      const delay = -Math.floor(Math.random() * dur);
-      const rot = Math.floor(Math.random() * 16) - 8;
-      const op = 0.4 + Math.random() * 0.25;
-      card.style.left = Math.floor(Math.random() * 90) + "%";
-      card.style.setProperty("--w", w + "px");
-      card.style.setProperty("--dur", dur + "s");
-      card.style.setProperty("--rot", rot + "deg");
-      card.style.setProperty("--op", op.toFixed(2));
-      card.style.animationDelay = delay + "s";
-      const img = document.createElement("img");
-      img.loading = "lazy";
-      img.alt = "";
-      img.src = "https://picsum.photos/seed/candid" + i + "/240/320";
-      card.appendChild(img);
-      stream.appendChild(card);
+    const lanes = window.innerWidth > 700 ? 8 : 4;
+    const perLane = 2;
+    let n = 0;
+    for (let lane = 0; lane < lanes; lane++) {
+      for (let k = 0; k < perLane; k++) {
+        const card = document.createElement("div");
+        card.className = "float-card";
+        // Even horizontal spread across the whole screen, with a little jitter.
+        const laneCenter = ((lane + 0.5) / lanes) * 100;
+        const jitter = (Math.random() - 0.5) * (100 / lanes) * 0.6;
+        const x = Math.max(1, Math.min(90, laneCenter + jitter));
+        const w = 80 + Math.floor(Math.random() * 60);
+        const dur = 20 + Math.floor(Math.random() * 8);
+        // Split each lane's cards across the cycle so one is always mid-screen.
+        const delay = -(k / perLane) * dur - Math.random() * (dur / perLane);
+        const rot = Math.floor(Math.random() * 14) - 7;
+        const op = 0.38 + Math.random() * 0.22;
+        card.style.left = x.toFixed(1) + "%";
+        card.style.setProperty("--w", w + "px");
+        card.style.setProperty("--dur", dur + "s");
+        card.style.setProperty("--rot", rot + "deg");
+        card.style.setProperty("--op", op.toFixed(2));
+        card.style.animationDelay = delay.toFixed(1) + "s";
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.alt = "";
+        img.src = "https://picsum.photos/seed/candid" + n + "/240/320";
+        card.appendChild(img);
+        stream.appendChild(card);
+        n++;
+      }
     }
   }
 
