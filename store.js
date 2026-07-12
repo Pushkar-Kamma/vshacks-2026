@@ -159,6 +159,17 @@ const Store = (function () {
     if (result.error) throw result.error;
   }
 
+  // Rename all of one person's photos in a room, so a name change shows up for
+  // everyone after they refresh. Best-effort; a failure here doesn't block the UI.
+  async function renameUploader(code, uploaderId, newName) {
+    const result = await client
+      .from("photos")
+      .update({ uploader_name: newName })
+      .eq("room_code", code)
+      .eq("uploader_id", uploaderId);
+    if (result.error) throw result.error;
+  }
+
   return {
     createRoom: createRoom,
     getRoom: getRoom,
@@ -166,5 +177,6 @@ const Store = (function () {
     addPhoto: addPhoto,
     subscribe: subscribe,
     deletePhoto: deletePhoto,
+    renameUploader: renameUploader,
   };
 })();

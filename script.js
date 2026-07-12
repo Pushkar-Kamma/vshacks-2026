@@ -373,6 +373,24 @@
     $("me-chip").title = "You're " + state.identity.name + " — click to rename";
   }
 
+  // Reflect a name change EVERYWHERE, not just the chip: the members list (which
+  // powers the filter chips), your already-uploaded photos, and the database rows
+  // so it sticks after a refresh and other people see it too.
+  function applyMyName(newName) {
+    const myId = state.identity.id;
+    if (state.members[myId]) state.members[myId].name = newName;
+    state.photos.forEach(function (p) {
+      if (p.uploaderId === myId) p.uploaderName = newName;
+    });
+    renderMe();
+    render();
+    if (state.room) {
+      Store.renameUploader(state.room.code, myId, newName).catch(function (e) {
+        console.warn("couldn't save name to server", e);
+      });
+    }
+  }
+
   // Click your name to rename yourself — inline, with the text selected, like
   // renaming a file. Enter saves, Escape cancels.
   function startRename() {
@@ -399,7 +417,7 @@
       chip.classList.remove("editing");
       if (save && value) {
         state.identity = Names.setName(value);
-        renderMe();
+        applyMyName(value);
         toast("You're now " + state.identity.name);
       }
     }
