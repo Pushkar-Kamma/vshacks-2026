@@ -75,6 +75,17 @@
     channel: null,
   };
 
+  // Content "vibes" for grouping photos by look (see Curate.analyzeScene).
+  const SCENES = {
+    warm:   { label: "Sunset", emoji: "🌅" },
+    green:  { label: "Nature", emoji: "🌿" },
+    blue:   { label: "Sky & Sea", emoji: "💧" },
+    night:  { label: "Night", emoji: "🌃" },
+    bright: { label: "Bright", emoji: "☀️" },
+    mono:   { label: "Urban", emoji: "🏙️" },
+    vivid:  { label: "Vivid", emoji: "🌸" },
+  };
+
   // ---------- rooms ----------
   async function startSession() {
     try {
@@ -196,6 +207,7 @@
       try {
         const img = await fileToImage(file);
         const features = Curate.analyzePhoto(img);
+        const scene = Curate.analyzeScene(img);
         const blob = await downscaleToBlob(img, 1200, 0.72);
         URL.revokeObjectURL(img.src);
         const saved = await Store.addPhoto(state.room.code, {
@@ -206,6 +218,7 @@
           phash: features.phash,
           sharpness: features.sharpness,
         }, blob);
+        saved.scene = scene;
         if (addToState(saved)) { trackSeen([saved]); render(); }
         added++;
       } catch (e) {
@@ -224,7 +237,7 @@
     if (state.view === "best") list = list.filter(function (p) { return p.isBest; });
     const f = state.filter;
     if (f.type === "person") list = list.filter(function (p) { return p.uploaderId === f.id; });
-    if (f.type === "moment") list = list.filter(function (p) { return p.momentId === f.id; });
+    if (f.type === "scene") list = list.filter(function (p) { return p.scene === f.id; });
     if (f.type === "me" && state.meIds) list = list.filter(function (p) { return state.meIds.has(p.id); });
     return list;
   }
@@ -235,7 +248,7 @@
     if (f.type === "person" && !state.photos.some(function (p) { return p.uploaderId === f.id; })) {
       state.filter = { type: "none" };
     }
-    if (f.type === "moment" && !state.photos.some(function (p) { return p.momentId === f.id; })) {
+    if (f.type === "scene" && !state.photos.some(function (p) { return p.scene === f.id; })) {
       state.filter = { type: "none" };
     }
   }
@@ -278,6 +291,7 @@
     renderAvatars();
     renderFilters();
     renderStats();
+    classifyScenes();
 
     grid.innerHTML = "";
     list.forEach(function (photo) {
@@ -357,6 +371,26 @@
     return b;
   }
 
+  // Figure out each photo's "vibe" from its colours. Runs in the background for
+  // photos that don't have one yet (e.g. ones other people added), then re-renders.
+  let sceneRunning = false;
+  function classifyScenes() {
+    if (sceneRunning) return;
+    const todo = state.photos.filter(function (p) { return !p.scene && !p.sceneFailed; });
+    if (!todo.length) return;
+    sceneRunning = true;
+    Promise.all(todo.map(function (p) {
+      return urlToImage(p.url).then(function (img) {
+        p.scene = Curate.analyzeScene(img);
+      }).catch(function () {
+        p.sceneFailed = true;
+      });
+    })).then(function () {
+      sceneRunning = false;
+      render();
+    });
+  }
+
   function renderFilters() {
     const row = $("filter-row");
     row.innerHTML = "";
@@ -370,13 +404,13 @@
         state.filter = { type: "person", id: id }; render();
       }));
     });
-    const moments = {};
-    state.photos.forEach(function (p) { moments[p.momentId] = true; });
-    Object.keys(moments).forEach(function (mid) {
-      const idNum = Number(mid);
-      const active = state.filter.type === "moment" && state.filter.id === idNum;
-      row.appendChild(makeChip("🕒 Moment " + (idNum + 1), active, null, function () {
-        state.filter = { type: "moment", id: idNum }; render();
+    const scenes = {};
+    state.photos.forEach(function (p) { if (p.scene) scenes[p.scene] = true; });
+    Object.keys(scenes).forEach(function (key) {
+      const meta = SCENES[key] || { label: key, emoji: "🖼" };
+      const active = state.filter.type === "scene" && state.filter.id === key;
+      row.appendChild(makeChip(meta.emoji + " " + meta.label, active, null, function () {
+        state.filter = { type: "scene", id: key }; render();
       }));
     });
   }
@@ -416,15 +450,16 @@
     dot.textContent = initials(photo.uploaderName);
     owner.appendChild(dot);
     owner.appendChild(document.createTextNode(" " + photo.uploaderName));
-    const sameMoment = state.photos.filter(function (p) { return p.momentId === photo.momentId; });
+    const sameScene = state.photos.filter(function (p) { return p.scene && p.scene === photo.scene; });
     const anglesBtn = $("loupe-angles");
-    if (sameMoment.length > 1) {
-      anglesBtn.textContent = "Other angles (" + sameMoment.length + ")";
+    if (photo.scene && sameScene.length > 1) {
+      const meta = SCENES[photo.scene] || { label: "like this", emoji: "" };
+      anglesBtn.textContent = "More " + meta.label + " (" + sameScene.length + ")";
       show(anglesBtn);
       anglesBtn.onclick = function () {
         hide($("modal-loupe"));
         state.view = "all";
-        state.filter = { type: "moment", id: photo.momentId };
+        state.filter = { type: "scene", id: photo.scene };
         syncToggle();
         render();
       };

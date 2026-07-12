@@ -83,6 +83,53 @@ const Curate = (function () {
     return { phash: dHash(img), sharpness: sharpness(img) };
   }
 
+  // Average colour of an image (drawn tiny), as {r,g,b} 0-255.
+  function averageColor(img) {
+    const w = 16, h = 16;
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let r = 0, g = 0, b = 0;
+    const count = w * h;
+    for (let i = 0; i < count; i++) {
+      r += data[i * 4];
+      g += data[i * 4 + 1];
+      b += data[i * 4 + 2];
+    }
+    return { r: r / count, g: g / count, b: b / count };
+  }
+
+  // Sort a colour into a rough "vibe": warm sunset, green nature, blue sky/sea,
+  // night, bright, urban/grey, or vivid. It's a mood guess, not exact tagging.
+  function sceneFromRgb(r, g, b) {
+    const rn = r / 255, gn = g / 255, bn = b / 255;
+    const max = Math.max(rn, gn, bn);
+    const min = Math.min(rn, gn, bn);
+    const l = (max + min) / 2;
+    const d = max - min;
+    let s = 0, h = 0;
+    if (d !== 0) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === rn) h = (((gn - bn) / d) % 6 + 6) % 6;
+      else if (max === gn) h = (bn - rn) / d + 2;
+      else h = (rn - gn) / d + 4;
+      h *= 60;
+    }
+    if (l < 0.20) return "night";
+    if (s < 0.15) return l > 0.70 ? "bright" : "mono";
+    if (h < 70 || h >= 330) return "warm";
+    if (h < 170) return "green";
+    if (h < 260) return "blue";
+    return "vivid";
+  }
+
+  // The scene/vibe key for one loaded <img>.
+  function analyzeScene(img) {
+    const c = averageColor(img);
+    return sceneFromRgb(c.r, c.g, c.b);
+  }
+
   // Group near-duplicates with a simple greedy pass.
   // A photo joins the first group whose photo it is within `threshold` bits of.
   function groupDuplicates(photos, threshold) {
@@ -151,6 +198,7 @@ const Curate = (function () {
 
   return {
     analyzePhoto: analyzePhoto,
+    analyzeScene: analyzeScene,
     curate: curate,
     hamming: hamming,
   };
