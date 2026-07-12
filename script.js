@@ -1,9 +1,4 @@
-// script.js — Candid app controller.
-// Wires the UI to the brain (Curate), identities (Names), backend (Store),
-// and the optional face helper (Faces).
-
 (function () {
-  // ---------- tiny helpers ----------
   function $(id) { return document.getElementById(id); }
   function show(el) { el.classList.remove("hidden"); }
   function hide(el) { el.classList.add("hidden"); }
@@ -48,7 +43,6 @@
     });
   }
 
-  // Shrink an image and return a JPEG Blob (keeps uploads fast).
   function downscaleToBlob(img, maxDim, quality) {
     const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
     const w = Math.round(img.width * scale);
@@ -62,7 +56,6 @@
     });
   }
 
-  // ---------- state ----------
   const state = {
     identity: Names.getIdentity(),
     room: null,
@@ -76,7 +69,6 @@
     channel: null,
   };
 
-  // Content "vibes" for grouping photos by look (see Curate.analyzeScene).
   const SCENES = {
     warm:   { label: "Sunset", emoji: "🌅" },
     green:  { label: "Nature", emoji: "🌿" },
@@ -87,7 +79,6 @@
     vivid:  { label: "Vivid", emoji: "🌸" },
   };
 
-  // ---------- rooms ----------
   async function startSession() {
     try {
       const name = Names.randomRoomName();
@@ -122,7 +113,6 @@
     startPolling();
   }
 
-  // Leave the room and go back home (used by the ‹ button).
   function leaveRoom() {
     clearInterval(pollTimer);
     pollTimer = null;
@@ -152,7 +142,6 @@
     }
   }
 
-  // Someone (another device, or us) deleted a photo — drop it live everywhere.
   function onRemove(id) {
     if (!state.byId[id]) return;
     delete state.byId[id];
@@ -166,7 +155,6 @@
     render();
   }
 
-  // Remember the newest photo time we've seen, so polling only asks for newer ones.
   function trackSeen(photos) {
     photos.forEach(function (p) {
       if (p.createdAt && (!state.lastSeen || p.createdAt > state.lastSeen)) {
@@ -175,8 +163,6 @@
     });
   }
 
-  // Live updates use Supabase realtime when it's enabled; this polling backup
-  // keeps everyone in sync either way by checking for new photos every few seconds.
   let pollTimer = null;
   function startPolling() {
     clearInterval(pollTimer);
@@ -199,7 +185,6 @@
 
   function addToState(photo) {
     if (!photo || !photo.id || state.byId[photo.id]) return false;
-    // Guard against malformed rows (anyone can insert with the public key).
     if (typeof photo.phash !== "string" || photo.phash.length !== 64) return false;
     if (!photo.uploaderName) photo.uploaderName = "Someone";
     if (!photo.color) photo.color = "#2E9BF5";
@@ -211,8 +196,6 @@
     return true;
   }
 
-  // ---------- adding photos ----------
-  // Process one file end to end: analyze, shrink, upload, add to the gallery.
   async function processPhoto(file) {
     const img = await fileToImage(file);
     const features = Curate.analyzePhoto(img);
@@ -239,8 +222,6 @@
     let failed = 0;
     let index = 0;
 
-    // Upload a few at a time (a small pool) so a big batch finishes much faster
-    // than doing them strictly one-by-one.
     async function worker() {
       while (index < images.length) {
         const file = images[index++];
@@ -256,7 +237,6 @@
     toast("Added " + added + (failed ? ", " + failed + " skipped (try JPEG)" : ""));
   }
 
-  // ---------- rendering ----------
   function visiblePhotos() {
     Curate.curate(state.photos);
     validateFilter();
@@ -269,7 +249,6 @@
     return list;
   }
 
-  // Drop a filter that no longer matches any photo (prevents a stuck empty screen).
   function validateFilter() {
     const f = state.filter;
     if (f.type === "person" && !state.photos.some(function (p) { return p.uploaderId === f.id; })) {
@@ -294,7 +273,6 @@
     $("count-best").textContent = state.photos.filter(function (p) { return p.isBest; }).length;
     $("count-all").textContent = total;
     if (state.room) $("room-code").textContent = state.room.code + " · " + total + (total === 1 ? " photo" : " photos");
-    // An empty room has nothing to sort or filter, so hide those bars until there are photos.
     const controlsEl = document.querySelector(".controls");
     if (controlsEl) controlsEl.style.display = total ? "" : "none";
     $("filter-row").style.display = total ? "" : "none";
@@ -355,7 +333,7 @@
     const wrap = $("member-avatars");
     wrap.innerHTML = "";
     Object.keys(state.members).forEach(function (id) {
-      if (id === state.identity.id) return; // you're already shown as the "me" chip
+      if (id === state.identity.id) return;
       const m = state.members[id];
       const a = document.createElement("span");
       a.className = "avatar";
@@ -366,16 +344,12 @@
     });
   }
 
-  // Show who "you" are in the room bar (click the chip to rename yourself).
   function renderMe() {
     $("me-dot").style.background = state.identity.color;
     $("me-name").textContent = state.identity.name;
     $("me-chip").title = "You're " + state.identity.name + " — click to rename";
   }
 
-  // Reflect a name change EVERYWHERE, not just the chip: the members list (which
-  // powers the filter chips), your already-uploaded photos, and the database rows
-  // so it sticks after a refresh and other people see it too.
   function applyMyName(newName) {
     const myId = state.identity.id;
     if (state.members[myId]) state.members[myId].name = newName;
@@ -391,8 +365,6 @@
     }
   }
 
-  // Click your name to rename yourself — inline, with the text selected, like
-  // renaming a file. Enter saves, Escape cancels.
   function startRename() {
     const chip = $("me-chip");
     const nameSpan = $("me-name");
@@ -428,35 +400,6 @@
     input.addEventListener("blur", function () { finish(true); });
   }
 
-  // The "automation" headline: how many photos we pooled, kept, and tidied.
-  function renderStats() {
-    const el = $("stats");
-    const total = state.photos.length;
-    if (!total) { hide(el); return; }
-    let best = 0;
-    for (const p of state.photos) if (p.isBest) best++;
-    const dupes = total - best;
-    el.innerHTML = "";
-    const spark = document.createElement("span");
-    spark.className = "spark";
-    spark.textContent = "✨ ";
-    el.appendChild(spark);
-    el.appendChild(strong(total));
-    el.appendChild(document.createTextNode(" pooled · "));
-    el.appendChild(strong(best));
-    el.appendChild(document.createTextNode(" best kept · "));
-    el.appendChild(strong(dupes));
-    el.appendChild(document.createTextNode(" tidied away"));
-    show(el);
-  }
-  function strong(n) {
-    const b = document.createElement("b");
-    b.textContent = String(n);
-    return b;
-  }
-
-  // Figure out each photo's "vibe" from its colours. Runs in the background for
-  // photos that don't have one yet (e.g. ones other people added), then re-renders.
   let sceneRunning = false;
   function classifyScenes() {
     if (sceneRunning) return;
@@ -513,7 +456,6 @@
     return chip;
   }
 
-  // ---------- loupe ----------
   let loupeList = [];
   let loupeIndex = 0;
   function openLoupe(photo, list) {
@@ -555,8 +497,6 @@
     renderLoupe();
   }
 
-  // ---------- slideshow ----------
-  // Play the photos currently on screen fullscreen, auto-advancing (a highlight reel).
   let slideTimer = null;
   function startSlideshow() {
     const list = visiblePhotos();
@@ -572,8 +512,6 @@
     $("modal-loupe").classList.remove("playing");
   }
 
-  // ---------- delete ----------
-  // Remove the photo currently open in the loupe (for everyone).
   async function deleteCurrent() {
     const photo = loupeList[loupeIndex];
     if (!photo) return;
@@ -598,8 +536,6 @@
     }
   }
 
-  // ---------- download ----------
-  // Download a single photo as a file.
   async function downloadOne(photo) {
     const res = await fetch(photo.url);
     if (!res.ok) throw new Error("fetch failed");
@@ -613,8 +549,6 @@
     URL.revokeObjectURL(a.href);
   }
 
-  // Download everything currently shown. If JSZip loaded, bundle it into ONE .zip
-  // (much nicer than dozens of separate browser downloads).
   async function downloadVisible() {
     const list = visiblePhotos();
     if (!list.length) { toast("Nothing to download"); return; }
@@ -648,7 +582,6 @@
         return;
       } catch (e) { console.error(e); }
     }
-    // Fallback: one file at a time.
     toast("Downloading " + list.length + " photo(s)…");
     for (const photo of list) {
       try { await downloadOne(photo); }
@@ -656,7 +589,6 @@
     }
   }
 
-  // ---------- photos of you ----------
   let selfieStream = null;
   async function openSelfie() {
     show($("modal-selfie"));
@@ -678,7 +610,6 @@
   }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  // Average several 128-number faceprints into one steadier faceprint.
   function averageDescriptors(list) {
     const out = new Float32Array(list[0].length);
     for (const d of list) {
@@ -699,7 +630,6 @@
       const video = $("selfie-video");
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      // Take a few quick shots and average them for a steadier faceprint.
       const shots = [];
       for (let k = 0; k < 3; k++) {
         status.textContent = "Scanning your face — hold still (" + (k + 1) + "/3)";
@@ -738,7 +668,6 @@
     }
   }
 
-  // ---------- invite / qr ----------
   function roomUrl() {
     return location.origin + location.pathname + "?room=" + state.room.code;
   }
@@ -757,7 +686,6 @@
     $("tab-all").classList.toggle("active", state.view === "all");
   }
 
-  // ---------- wire up ----------
   function bind() {
     $("btn-start").addEventListener("click", startSession);
     $("btn-join").addEventListener("click", function () { joinSession($("join-code").value); });
@@ -768,8 +696,6 @@
 
     $("btn-add").addEventListener("click", function () { $("file-input").click(); });
     $("file-input").addEventListener("change", function (e) {
-      // Copy the list first: clearing the input's value empties its FileList,
-      // which would otherwise cut off the rest of a multi-photo upload.
       const files = Array.from(e.target.files);
       e.target.value = "";
       addPhotos(files);
@@ -796,11 +722,10 @@
     $("btn-slideshow").addEventListener("click", startSlideshow);
     $("me-chip").addEventListener("click", startRename);
     $("me-chip").addEventListener("keydown", function (e) {
-      if (e.target !== e.currentTarget) return; // ignore keys from the input inside
+      if (e.target !== e.currentTarget) return;
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startRename(); }
     });
 
-    // Keyboard: arrows to move, Esc to close (also stops a running slideshow).
     document.addEventListener("keydown", function (e) {
       if ($("modal-loupe").classList.contains("hidden")) return;
       if (e.key === "ArrowLeft") loupeStep(-1);
@@ -808,7 +733,6 @@
       else if (e.key === "Escape") { stopSlideshow(); hide($("modal-loupe")); }
     });
 
-    // Swipe left/right on the big photo (mobile). A tap stops a running slideshow.
     let touchX = null;
     const limg = $("loupe-img");
     limg.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
@@ -829,15 +753,11 @@
     });
   }
 
-  // ---------- home hero animation ----------
   function initHero() {
     buildPhotoStream();
     shuffleWordmark();
   }
 
-  // Real photos that drift gently up the screen behind the hero. Uses evenly
-  // spaced lanes (so photos cover the full width, not clustered on one side) and
-  // staggers each lane in time (so the flow stays even — no clumps or empty gaps).
   function buildPhotoStream() {
     const stream = $("photo-stream");
     if (!stream) return;
@@ -848,13 +768,11 @@
       for (let k = 0; k < perLane; k++) {
         const card = document.createElement("div");
         card.className = "float-card";
-        // Even horizontal spread across the whole screen, with a little jitter.
         const laneCenter = ((lane + 0.5) / lanes) * 100;
         const jitter = (Math.random() - 0.5) * (100 / lanes) * 0.6;
         const x = Math.max(1, Math.min(90, laneCenter + jitter));
         const w = 80 + Math.floor(Math.random() * 60);
         const dur = 20 + Math.floor(Math.random() * 8);
-        // Split each lane's cards across the cycle so one is always mid-screen.
         const delay = -(k / perLane) * dur - Math.random() * (dur / perLane);
         const rot = Math.floor(Math.random() * 14) - 7;
         const op = 0.38 + Math.random() * 0.22;
@@ -875,7 +793,6 @@
     }
   }
 
-  // "Candid" flickers through a few fonts on load, then settles on the display font.
   function shuffleWordmark() {
     const el = document.querySelector(".brandmark");
     if (!el) return;

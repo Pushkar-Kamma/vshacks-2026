@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- HOME -->
     <section id="screen-home" class="screen">
       <div class="aurora" aria-hidden="true">
         <div class="blob b1"></div>
@@ -34,7 +33,6 @@
       </div>
     </section>
 
-    <!-- ROOM -->
     <section id="screen-room" class="screen hidden">
       <header class="room-bar">
         <div class="room-left">
@@ -80,7 +78,6 @@
       <input id="file-input" type="file" accept="image/*" multiple hidden />
     </section>
 
-    <!-- INVITE / QR -->
     <div id="modal-qr" class="modal hidden">
       <div class="modal-card">
         <button class="modal-close" data-close>✕</button>
@@ -91,7 +88,6 @@
       </div>
     </div>
 
-    <!-- LOUPE -->
     <div id="modal-loupe" class="modal loupe hidden">
       <button class="modal-close" data-close>✕</button>
       <button id="loupe-prev" class="loupe-nav prev">‹</button>
@@ -105,7 +101,6 @@
       </div>
     </div>
 
-    <!-- PHOTOS OF YOU -->
     <div id="modal-selfie" class="modal hidden">
       <div class="modal-card">
         <button class="modal-close" data-close>✕</button>
@@ -119,13 +114,11 @@
 
     <div id="toast" class="toast hidden"></div>
 
-    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js"></script>
 
-    <!-- Our code -->
     <script src="supabase-config.js"></script>
     <script src="curate.js"></script>
     <script src="names.js"></script>

@@ -1,16 +1,15 @@
 :root {
-  /* "Deep Water" teal palette (from the team's Replit design) */
-  --bg:      hsl(200 60% 5%);    /* near-black teal */
+  --bg:      hsl(200 60% 5%);
   --surface: hsl(198 55% 11%);
-  --card:    hsl(198 58% 12%);   /* Deep Sea Teal */
+  --card:    hsl(198 58% 12%);
   --border:  hsl(197 40% 20%);
-  --text:    hsl(197 55% 94%);   /* Frost White */
+  --text:    hsl(197 55% 94%);
   --muted:   hsl(197 35% 60%);
-  --accent:  hsl(197 50% 58%);   /* Cerulean Ripple #5EB0C8 */
-  --icy:     hsl(197 51% 76%);   /* Icy Glaze */
-  --arctic:  hsl(194 53% 35%);   /* Arctic Ocean */
-  --deep:    hsl(198 72% 16%);   /* Deep Sea Teal (dark) */
-  --best:    #ffc53d;            /* warm amber star */
+  --accent:  hsl(197 50% 58%);
+  --icy:     hsl(197 51% 76%);
+  --arctic:  hsl(194 53% 35%);
+  --deep:    hsl(198 72% 16%);
+  --best:    #ffc53d;
   --radius:  16px;
 
   --hero-grad: linear-gradient(135deg, var(--icy) 0%, var(--accent) 55%, var(--arctic) 100%);
@@ -33,10 +32,8 @@ body {
 
 .screen { min-height: 100vh; display: flex; flex-direction: column; }
 
-/* ---------- Home ---------- */
 #screen-home { align-items: center; justify-content: center; text-align: center; padding: 24px; position: relative; overflow: hidden; min-height: 100dvh; height: 100dvh; }
 
-/* Drifting aurora glow */
 .aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .blob { position: absolute; border-radius: 50%; }
 .blob.b1 { top: -20%; left: 50%; width: 700px; height: 500px; background: radial-gradient(ellipse, hsl(197 50% 35% / .55) 0%, transparent 65%); animation: drift1 22s ease-in-out infinite alternate; }
@@ -46,13 +43,11 @@ body {
 @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(40px,-28px); } }
 @keyframes drift3 { from { transform: translate(0,0); } to { transform: translate(-28px,-20px); } }
 
-/* Floating photo stream — real photos drift gently upward behind the hero.
-   Clipped by overflow:hidden so it can never create scrolling. */
 .photo-stream { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
 .float-card {
   position: absolute; top: 0; width: var(--w, 110px); aspect-ratio: 3 / 4;
   border-radius: 14px; overflow: hidden;
-  background: linear-gradient(160deg, var(--arctic), var(--deep)); /* fallback if the image fails */
+  background: linear-gradient(160deg, var(--arctic), var(--deep));
   box-shadow: 0 10px 30px hsl(200 60% 3% / .55);
   transform: translateY(115vh);
   animation: riseUp var(--dur, 22s) linear infinite;
@@ -67,7 +62,6 @@ body {
   88%  { opacity: var(--op, .55); }
   100% { transform: translateY(-70vh) rotate(var(--rot, 0deg)); opacity: 0; }
 }
-/* Dark vignette so the hero text stays readable over the moving photos */
 .hero-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2;
   background: radial-gradient(ellipse 60% 55% at 50% 50%, hsl(200 60% 5% / .78) 0%, hsl(200 60% 5% / .35) 45%, transparent 75%); }
 
@@ -88,7 +82,6 @@ body {
 .input::placeholder { color: hsl(197 30% 50%); }
 .home-foot { color: hsl(197 35% 58%); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 500; margin: 6px 0 0; text-shadow: 0 2px 12px hsl(200 60% 4% / .7); }
 
-/* ---------- Room bar ---------- */
 .room-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid hsl(197 40% 20% / .5); position: sticky; top: 0; background: hsl(200 60% 5% / .6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 15; }
 .room-title { display: flex; flex-direction: column; min-width: 0; margin-right: 8px; }
 #room-name { font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -102,7 +95,6 @@ body {
 .leave-btn { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 22px; line-height: 1; cursor: pointer; }
 .leave-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* "You" chip (click to rename yourself, like renaming a file) */
 .me-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; max-width: 150px; transition: border-color .15s, box-shadow .15s; }
 .me-chip:hover { border-color: var(--accent); }
 .me-chip.editing { border-color: var(--accent); box-shadow: 0 0 0 3px hsl(197 50% 58% / .18); }
@@ -110,12 +102,11 @@ body {
 #me-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-rename { width: 84px; background: transparent; border: none; outline: none; color: var(--text); font: inherit; padding: 0; }
 
-/* ---------- Control bar (view + actions) ---------- */
 .controls { display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
 .control-actions { display: flex; gap: 6px; }
 .ctl-btn { height: 38px; padding: 0 12px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: border-color .15s, color .15s; }
 .ctl-btn .ctl-ico { font-size: 15px; line-height: 1; }
-.ctl-label { display: none; } /* icon-only on phones; labels appear on wider screens */
+.ctl-label { display: none; }
 .ctl-btn:hover { border-color: var(--accent); color: var(--accent); }
 @media (min-width: 600px) { .ctl-label { display: inline; } }
 .toggle { position: relative; display: inline-flex; background: var(--surface); border-radius: 11px; padding: 4px; }
@@ -124,12 +115,6 @@ body {
 .toggle-opt.active { background: var(--card); border-color: var(--border); box-shadow: var(--shadow-lg); color: var(--text); }
 #tab-best.active { color: var(--best); }
 
-/* Auto-clean stats line */
-.stats { text-align: center; font-size: 12.5px; color: var(--muted); margin: -6px 0 10px; padding: 0 16px; }
-.stats b { color: var(--text); font-weight: 600; }
-.stats .spark { color: var(--best); }
-
-/* ---------- Filters ---------- */
 .filter-row { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 14px; scrollbar-width: none; }
 .filter-row::-webkit-scrollbar { display: none; }
 .chip { flex: 0 0 auto; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
@@ -137,26 +122,18 @@ body {
 .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .chip .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-/* ---------- Grid ---------- */
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; flex: 1; align-content: start; }
-/* When there are no tiles, don't let the grid grow — that lets the empty-state
-   message use its auto margins to truly centre in the leftover space. */
 .grid:empty { flex: 0; padding: 0; }
-/* On wider screens, add columns so photos fill the width at a sensible size
-   instead of a few giant tiles. */
 @media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
 .tile { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--surface); cursor: pointer; border-radius: 6px; animation: tileIn .28s ease both; transition: transform .15s; }
 .tile:active { transform: scale(.96); }
 .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @keyframes tileIn { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
 .tile .star { position: absolute; top: 6px; right: 6px; color: var(--best); font-size: 14px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
-.tile .owner-dot { position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
 .tile .dup { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
 
-/* Empty state — big, centred, and scales with the device. Sizes use the SMALLER
-   of width/height (min(vw, vh)) so it grows on big screens but never overflows short ones. */
 .empty {
-  margin: auto;                       /* centres it both ways in the leftover room space */
+  margin: auto;
   max-width: min(560px, 90vw);
   padding: clamp(14px, 3vh, 36px) clamp(20px, 5vw, 48px);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -173,7 +150,7 @@ body {
   margin-bottom: clamp(10px, 2vh, 20px);
 }
 .empty p { margin: 0; }
-.empty p:not(.muted) {                /* the “No photos yet.” headline */
+.empty p:not(.muted) {
   font-size: clamp(20px, 4.6vw, 30px);
   font-weight: 700;
   color: var(--text);
@@ -181,15 +158,11 @@ body {
 }
 .empty .muted { font-size: clamp(14px, 3.4vw, 18px); line-height: 1.5; }
 
-/* ---------- Floating toolbar ---------- */
 .toolbar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; padding: 16px; z-index: 15; background: linear-gradient(to top, var(--bg) 35%, transparent); }
 .tool-add { width: 100%; max-width: 420px; height: 52px; border: none; border-radius: 12px; background: var(--accent); color: hsl(200 60% 5%); font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: var(--hero-shadow); transition: transform .15s; }
 .tool-add:active { transform: scale(.98); }
 #screen-room { padding-bottom: 96px; }
 
-/* Flowing aurora behind the room. A big teal gradient slowly pans, so the
-   background gently moves. Because the colour lives in the gradient STOPS (not
-   in viewport-sized blobs), it stays equally rich on a phone and a wide desktop. */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   opacity: 0; transition: opacity .8s ease;
@@ -206,7 +179,6 @@ body::before {
   background-repeat: no-repeat;
   animation: auroraFlow 26s ease-in-out infinite alternate;
 }
-/* Soft drifting accents (a teal lift + a faint warm spark) for organic depth. */
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   opacity: 0; transition: opacity .8s ease;
@@ -227,7 +199,6 @@ body.in-room::before, body.in-room::after { opacity: 1; }
   to   { background-position: 90% 100%; }
 }
 
-/* ---------- Modals ---------- */
 .modal { position: fixed; inset: 0; background: hsl(200 60% 3% / .85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 40; padding: 20px; }
 .modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; text-align: center; position: relative; box-shadow: var(--shadow-lg); }
 .modal-card h2 { margin: 0 0 12px; }
@@ -235,7 +206,6 @@ body.in-room::before, body.in-room::after { opacity: 1; }
 .qr { display: flex; justify-content: center; padding: 12px; background: #fff; border-radius: 12px; width: fit-content; margin: 0 auto 12px; }
 .room-code.big { font-size: 22px; letter-spacing: 2px; }
 
-/* Loupe */
 .modal.loupe { flex-direction: column; background: hsl(200 60% 3% / .95); }
 .loupe-img { max-width: 100%; max-height: 78vh; object-fit: contain; border-radius: 8px; }
 .loupe-nav { position: absolute; top: 50%; transform: translateY(-50%); background: hsl(198 58% 12% / .7); backdrop-filter: blur(8px); color: #fff; border: 1px solid var(--border); font-size: 28px; width: 46px; height: 62px; cursor: pointer; border-radius: 12px; }
@@ -249,8 +219,6 @@ body.in-room::before, body.in-room::after { opacity: 1; }
 @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
 .modal.loupe.playing .loupe-img { animation: kenburns 3s ease-in-out infinite alternate; }
 
-/* Selfie */
 .selfie-video { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; background: #000; margin: 16px auto; display: block; border: 3px solid var(--accent); box-shadow: 0 0 0 6px hsl(197 50% 58% / .15), 0 0 30px hsl(197 50% 58% / .25); transform: scaleX(-1); }
 
-/* Toast */
 .toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); background: var(--card); color: var(--text); padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 50; font-size: 14px; }

@@ -1,6 +1,3 @@
-// names.js — friendly random identities so nobody has to sign up.
-// Each device gets a name + color the first time; both can be changed and are saved.
-
 const Names = (function () {
   const adjectives = [
     "Golden", "Neon", "Sunny", "Cosmic", "Velvet", "Electric",
@@ -27,7 +24,6 @@ const Names = (function () {
     return pick(colors);
   }
 
-  // Get this device's identity, creating and saving one on first use.
   function getIdentity() {
     const saved = localStorage.getItem("candid_identity");
     if (saved) {
@@ -42,15 +38,6 @@ const Names = (function () {
     return identity;
   }
 
-  // Give this device a fresh random name + color (keeps the same id). Saved for next time.
-  function reroll() {
-    const current = getIdentity();
-    const next = { id: current.id, name: randomName(), color: randomColor() };
-    localStorage.setItem("candid_identity", JSON.stringify(next));
-    return next;
-  }
-
-  // Set a custom display name (keeps the same id + colour). Saved for next time.
   function setName(name) {
     const current = getIdentity();
     const next = { id: current.id, name: name, color: current.color };
@@ -58,7 +45,6 @@ const Names = (function () {
     return next;
   }
 
-  // A fun name for a new session, so it isn't just "Session".
   const vibes = [
     "Golden Hour", "Sunset Session", "Rooftop Night", "Beach Day",
     "Road Trip", "Backyard Hang", "Night Out", "Birthday Bash",
@@ -72,7 +58,6 @@ const Names = (function () {
     getIdentity: getIdentity,
     randomName: randomName,
     randomColor: randomColor,
-    reroll: reroll,
     setName: setName,
     randomRoomName: randomRoomName,
   };

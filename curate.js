@@ -1,35 +1,22 @@
-// curate.js — Candid's "automation brain".
-// Plain browser JavaScript. No framework, no network.
-// It does two jobs:
-//   1) analyzePhoto(img) -> a "fingerprint" + a sharpness score for one photo
-//   2) curate(photos)    -> groups near-duplicates, stars the sharpest, builds "moments"
-//
-// This is the piece that makes Candid an automation tool instead of a shared folder.
-
 const Curate = (function () {
-  // One small offscreen canvas we reuse for speed.
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-  // Draw an image small and return its brightness (grayscale) values.
   function grayscalePixels(img, w, h) {
     canvas.width = w;
     canvas.height = h;
     ctx.drawImage(img, 0, 0, w, h);
-    const data = ctx.getImageData(0, 0, w, h).data; // [r,g,b,a, r,g,b,a, ...]
+    const data = ctx.getImageData(0, 0, w, h).data;
     const gray = new Float64Array(w * h);
     for (let i = 0; i < w * h; i++) {
       const r = data[i * 4];
       const g = data[i * 4 + 1];
       const b = data[i * 4 + 2];
-      // standard brightness formula
       gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
     }
     return gray;
   }
 
-  // dHash: shrink to 9x8 and compare each pixel to its right neighbor -> 64 bits.
-  // Two similar photos end up with almost identical fingerprints.
   function dHash(img) {
     const w = 9;
     const h = 8;
@@ -42,11 +29,9 @@ const Curate = (function () {
         bits += left > right ? "1" : "0";
       }
     }
-    return bits; // 64-character string of "1" and "0"
+    return bits;
   }
 
-  // Sharpness ~ "variance of the Laplacian".
-  // Blurry photos have soft edges -> low score. Crisp photos -> high score.
   function sharpness(img) {
     const w = 64;
     const h = 64;
@@ -57,7 +42,6 @@ const Curate = (function () {
     for (let y = 1; y < h - 1; y++) {
       for (let x = 1; x < w - 1; x++) {
         const i = y * w + x;
-        // How different is this pixel from its 4 neighbors? (edge strength)
         const edge =
           4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - w] - gray[i + w];
         sum += edge;
@@ -66,10 +50,9 @@ const Curate = (function () {
       }
     }
     const mean = sum / count;
-    return sumSquares / count - mean * mean; // variance
+    return sumSquares / count - mean * mean;
   }
 
-  // Count how many bits differ between two fingerprints (0 = identical).
   function hamming(a, b) {
     let diff = 0;
     for (let i = 0; i < a.length; i++) {
@@ -78,12 +61,10 @@ const Curate = (function () {
     return diff;
   }
 
-  // Analyze one loaded <img>: returns its fingerprint + sharpness.
   function analyzePhoto(img) {
     return { phash: dHash(img), sharpness: sharpness(img) };
   }
 
-  // Average colour of an image (drawn tiny), as {r,g,b} 0-255.
   function averageColor(img) {
     const w = 16, h = 16;
     canvas.width = w;
@@ -100,8 +81,6 @@ const Curate = (function () {
     return { r: r / count, g: g / count, b: b / count };
   }
 
-  // Sort a colour into a rough "vibe": warm sunset, green nature, blue sky/sea,
-  // night, bright, urban/grey, or vivid. It's a mood guess, not exact tagging.
   function sceneFromRgb(r, g, b) {
     const rn = r / 255, gn = g / 255, bn = b / 255;
     const max = Math.max(rn, gn, bn);
@@ -124,14 +103,11 @@ const Curate = (function () {
     return "vivid";
   }
 
-  // The scene/vibe key for one loaded <img>.
   function analyzeScene(img) {
     const c = averageColor(img);
     return sceneFromRgb(c.r, c.g, c.b);
   }
 
-  // Group near-duplicates with a simple greedy pass.
-  // A photo joins the first group whose photo it is within `threshold` bits of.
   function groupDuplicates(photos, threshold) {
     if (threshold === undefined) threshold = 10;
     const groups = [];
@@ -149,26 +125,6 @@ const Curate = (function () {
     return groups;
   }
 
-  // Split photos into "moments" by capture time. A big time gap starts a new moment.
-  function groupMoments(photos, windowMs) {
-    if (windowMs === undefined) windowMs = 60 * 1000; // 1 minute
-    const sorted = photos.slice().sort(function (a, b) {
-      return a.takenAt - b.takenAt;
-    });
-    let momentId = 0;
-    let lastTime = null;
-    for (const photo of sorted) {
-      if (lastTime !== null && photo.takenAt - lastTime > windowMs) {
-        momentId++;
-      }
-      photo.momentId = momentId;
-      lastTime = photo.takenAt;
-    }
-    return photos;
-  }
-
-  // Main entry point. Photos must already have { phash, sharpness, takenAt }.
-  // Marks the sharpest photo in each duplicate group as isBest, and tags moments.
   function curate(photos, options) {
     options = options || {};
     const threshold = options.threshold === undefined ? 10 : options.threshold;
@@ -187,8 +143,6 @@ const Curate = (function () {
       }
       best.isBest = true;
     });
-
-    groupMoments(photos, options.momentWindowMs);
 
     const best = photos.filter(function (p) {
       return p.isBest;
