@@ -221,10 +221,10 @@
     $("count-all").textContent = state.photos.length;
     const empty = $("empty");
     if (state.photos.length === 0) {
-      empty.innerHTML = "<p>No photos yet.</p><p class='muted'>Tap ➕ to add the first ones.</p>";
+      empty.innerHTML = "<div class='empty-icon'>📷</div><p>No photos yet.</p><p class='muted'>Tap “Add Photos” to start the pool.</p>";
       show(empty);
     } else if (list.length === 0) {
-      empty.innerHTML = "<p>Nothing here.</p><p class='muted'>Try a different filter or the All tab.</p>";
+      empty.innerHTML = "<div class='empty-icon'>🔍</div><p>Nothing here.</p><p class='muted'>Try a different filter or the All tab.</p>";
       show(empty);
     } else {
       hide(empty);
@@ -544,6 +544,8 @@
   function syncToggle() {
     $("tab-best").classList.toggle("active", state.view === "best");
     $("tab-all").classList.toggle("active", state.view === "all");
+    const toggle = document.querySelector(".toggle");
+    if (toggle) toggle.classList.toggle("on-all", state.view === "all");
   }
 
   // ---------- wire up ----------

@@ -5,20 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Candid — everyone's best photos, together</title>
     <meta name="description" content="Candid pools everyone's photos and automatically keeps the best — including the ones you're in." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <!-- HOME -->
     <section id="screen-home" class="screen">
+      <div class="aurora" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+      </div>
+      <div class="scatter" aria-hidden="true">
+        <div class="scatter-card" style="--rot:-14deg; --delay:.10s; top:8%; left:4%;">🏖️</div>
+        <div class="scatter-card" style="--rot:11deg; --delay:.18s; top:11%; right:5%;">🌄</div>
+        <div class="scatter-card" style="--rot:-8deg; --delay:.26s; top:34%; left:2%;">🎉</div>
+        <div class="scatter-card" style="--rot:16deg; --delay:.14s; top:38%; right:3%;">🥂</div>
+        <div class="scatter-card" style="--rot:-11deg; --delay:.22s; bottom:22%; left:5%;">🌿</div>
+        <div class="scatter-card" style="--rot:9deg; --delay:.30s; bottom:16%; right:4%;">🎆</div>
+        <div class="scatter-card" style="--rot:-6deg; --delay:.34s; bottom:30%; right:13%;">📸</div>
+      </div>
       <div class="home-inner">
-        <p class="brandmark">Candid</p>
-        <p class="tagline">Everyone's photos from the moment — pooled, cleaned, and instantly yours.</p>
-        <button id="btn-start" class="btn btn-primary">Start a session</button>
+        <div class="hero-head">
+          <h1 class="brandmark">Candid</h1>
+          <p class="tagline">Everyone's best photos,<br />together — instantly.</p>
+        </div>
+        <button id="btn-start" class="btn btn-primary">Start a session →</button>
         <div class="join-row">
-          <input id="join-code" class="input" placeholder="Enter code (e.g. SUN-4821)" autocomplete="off" />
+          <input id="join-code" class="input" placeholder="Have a code? e.g. SUN-4821" autocomplete="off" />
           <button id="btn-join" class="btn btn-ghost">Join</button>
         </div>
-        <p class="home-foot">No app. No account. Just scan &amp; go.</p>
+        <p class="home-foot">No app · No account · Just memories</p>
       </div>
     </section>
 
@@ -40,6 +59,7 @@
 
       <div class="toggle-wrap">
         <div class="toggle" role="tablist">
+          <span class="toggle-glide" aria-hidden="true"></span>
           <button id="tab-best" class="toggle-opt active">⭐ Best <span id="count-best">0</span></button>
           <button id="tab-all" class="toggle-opt">All <span id="count-all">0</span></button>
         </div>
@@ -57,9 +77,11 @@
       </div>
 
       <nav class="toolbar">
-        <button id="btn-add" class="tool">➕<span>Add</span></button>
-        <button id="btn-me" class="tool">📸<span>Photos of me</span></button>
-        <button id="btn-download" class="tool">⬇<span>Download</span></button>
+        <div class="toolbar-inner">
+          <button id="btn-add" class="tool-add">➕ Add Photos</button>
+          <button id="btn-me" class="tool-icon" title="Photos of me">📸</button>
+          <button id="btn-download" class="tool-icon" title="Download">⬇</button>
+        </div>
       </nav>
       <input id="file-input" type="file" accept="image/*" multiple hidden />
     </section>
